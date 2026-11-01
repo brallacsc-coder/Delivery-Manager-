@@ -3,395 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>التاجر المتنقل | Mobile Merchant</title>
+    <title>التاجر المتنقل</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script>
-        tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: { 50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d', } }, fontFamily: { sans: ['Cairo', 'sans-serif'] } } } }
+        tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: { 600: '#16a34a' } }, fontFamily: { sans: ['Cairo', 'sans-serif'] } } } }
     </script>
-    <style>
-        body { font-family: 'Cairo', sans-serif; }
-        [x-cloak] { display: none !important; }
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .dark ::-webkit-scrollbar-track { background: #1e293b; }
-        .dark ::-webkit-scrollbar-thumb { background: #475569; }
-        .toast-enter { animation: slideIn 0.3s ease-out; }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        .fade-in { animation: fadeIn 0.2s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-        .autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #e2e8f0; border-radius: 0.75rem; max-height: 200px; overflow-y: auto; z-index: 60; margin-top: 4px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        .dark .autocomplete-list { background: #1e293b; border-color: #334155; }
-        .autocomplete-list div { padding: 8px 12px; cursor: pointer; font-size: 13px; }
-        .autocomplete-list div:hover { background: #f0fdf4; }
-        .dark .autocomplete-list div:hover { background: #334155; }
-        @media print { body * { visibility: hidden; } #receiptPrint, #receiptPrint * { visibility: visible; } #receiptPrint { position: absolute; left: 0; top: 0; width: 100%; } }
-    </style>
 </head>
-<body class="text-slate-800 dark:text-slate-100 bg-slate-100 dark:bg-slate-950 antialiased min-h-screen flex flex-col md:flex-row pb-16 md:pb-0" x-data="merchantApp()" x-init="initApp()">
-    <aside class="w-full md:w-64 bg-slate-900 dark:bg-black text-slate-300 flex-shrink-0 z-20 shadow-xl">
-        <div class="p-4 flex items-center justify-between border-b border-slate-800">
-            <div class="flex items-center space-x-3 space-x-reverse">
-                <div class="bg-brand-600 text-white p-2.5 rounded-xl shadow-lg shadow-brand-500/30"><i class="fa-solid fa-van-shuttle text-xl"></i></div>
-                <div><h1 class="font-black text-lg text-white leading-tight" x-text="lang==='en'?'Mobile Merchant':'التاجر المتنقل'"></h1><span class="text-xs text-brand-400 font-medium" x-text="lang==='en'?'Sales & Trips':'نظام المبيعات والجولات'"></span></div>
+<body class="bg-slate-100 dark:bg-slate-950 min-h-screen p-4" x-data="merchantApp()">
+    <div class="max-w-4xl mx-auto bg-white p-6 rounded-2xl shadow-lg">
+        <h1 class="text-2xl font-black mb-4">التاجر المتنقل</h1>
+        
+        <!-- Dashboard -->
+        <div class="grid grid-cols-2 gap-4 mb-4">
+            <div class="bg-green-50 p-4 rounded-xl">
+                <span class="text-sm text-gray-500">إجمالي المداخيل</span>
+                <h3 class="text-xl font-bold" x-text="totalSalesAmount.toLocaleString() + ' ' + currency"></h3>
+            </div>
+            <div class="bg-blue-50 p-4 rounded-xl">
+                <span class="text-sm text-gray-500">الربح الصافي</span>
+                <h3 class="text-xl font-bold" x-text="netProfits.toLocaleString() + ' ' + currency"></h3>
             </div>
         </div>
-        <nav class="hidden md:block p-3 space-y-1">
-            <template x-for="item in navItems" :key="item.id">
-                <button @click="currentTab = item.id" :class="currentTab === item.id ? 'bg-brand-600 text-white shadow-md' : 'hover:bg-slate-800 text-slate-400 hover:text-slate-200'" class="w-full flex items-center px-4 py-3 rounded-xl transition font-bold justify-between">
-                    <div class="flex items-center"><i class="fa-solid w-6 text-lg" :class="item.icon"></i><span class="mr-3" x-text="tabTitles[lang][item.id]"></span></div>
-                </button>
-            </template>
-            <div class="pt-3 mt-3 border-t border-slate-800">
-                <button @click="toggleDark()" class="w-full flex items-center px-4 py-3 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition font-bold"><i class="fa-solid w-6 text-lg" :class="darkMode ? 'fa-sun' : 'fa-moon'"></i><span class="mr-3" x-text="lang === 'en' ? (darkMode ? 'Light Mode' : 'Dark Mode') : (darkMode ? 'الوضع النهاري' : 'الوضع الليلي')"></span></button>
+
+        <!-- Add Sale -->
+        <div class="border-t pt-4 mt-4">
+            <h2 class="text-lg font-bold mb-2">إضافة بيع</h2>
+            <div class="grid grid-cols-2 gap-2">
+                <input x-model="saleForm.customerName" placeholder="اسم الزبون" class="p-2 border rounded">
+                <select x-model="saleForm.inventoryId" class="p-2 border rounded">
+                    <option value="">اختر منتج</option>
+                    <template x-for="p in inventory" :key="p.id">
+                        <option :value="p.id" x-text="p.name + ' - ' + p.price"></option>
+                    </template>
+                </select>
+                <input x-model.number="saleForm.quantity" type="number" min="1" class="p-2 border rounded">
+                <button @click="addSale()" class="bg-green-600 text-white p-2 rounded">حفظ البيع</button>
             </div>
-        </nav>
-    </aside>
-    <div class="flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden">
-        <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-10 px-3 py-2.5 sm:px-6 sm:py-3 flex items-center justify-between shadow-sm gap-2">
-            <h2 class="text-base sm:text-xl font-black flex items-center gap-2 truncate"><span x-text="tabTitles[lang][currentTab]"></span></h2>
-            <div class="flex items-center space-x-1.5 sm:space-x-2 space-x-reverse flex-shrink-0">
-                <button @click="cycleCurrency()" class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2.5 py-2 rounded-xl text-xs font-bold"><i class="fa-solid fa-money-bill-wave text-brand-600"></i> <span x-text="currency"></span></button>
-                <button @click="toggleLanguage()" class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2.5 py-2 rounded-xl text-xs font-bold"><span x-text="lang === 'ar' ? 'EN' : 'AR'"></span></button>
-                <button @click="openModal('sale')" class="bg-brand-600 hover:bg-brand-700 text-white px-2.5 sm:px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5"><i class="fa-solid fa-plus"></i><span x-text="lang === 'en' ? 'New Invoice' : 'فاتورة'"></span></button>
-            </div>
-        </header>
-        <main class="flex-1 p-3 sm:p-6 space-y-5">
-            <div x-show="currentTab === 'dashboard'" class="space-y-5 fade-in" x-cloak>
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
-                    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border shadow-sm"><span class="text-[11px] font-bold text-slate-400" x-text="lang === 'en' ? 'Today Sales' : 'فواتير الجولة'"></span><h3 class="text-xl sm:text-2xl font-black mt-2" x-text="todaySalesCount"></h3></div>
-                    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border shadow-sm"><span class="text-[11px] font-bold text-slate-400" x-text="lang === 'en' ? 'Total Income' : 'إجمالي المداخيل'"></span><h3 class="text-xl sm:text-2xl font-black mt-2"><span x-text="totalSalesAmount.toLocaleString()"></span> <span class="text-xs font-normal text-slate-400" x-text="currency"></span></h3></div>
-                    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border shadow-sm"><span class="text-[11px] font-bold text-slate-400" x-text="lang === 'en' ? 'Net Profit' : 'الربح الصافي'"></span><h3 class="text-xl sm:text-2xl font-black mt-2" :class="realNetProfit >= 0 ? 'text-brand-600' : 'text-rose-600'"><span x-text="realNetProfit.toLocaleString()"></span> <span class="text-xs font-normal text-slate-400" x-text="currency"></span></h3></div>
-                    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border shadow-sm"><span class="text-[11px] font-bold text-slate-400" x-text="lang === 'en' ? 'Pending Debts' : 'ديون متبقية'"></span><h3 class="text-xl sm:text-2xl font-black text-rose-600 mt-2"><span x-text="totalPendingDebts.toLocaleString()"></span> <span class="text-xs font-normal text-slate-400" x-text="currency"></span></h3></div>
-                </div>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                    <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border shadow-sm"><h3 class="font-bold text-sm mb-3" x-text="lang === 'en' ? 'Sales - Last 7 Days' : 'المبيعات - آخر 7 أيام'"></h3><canvas id="salesChart" height="150"></canvas></div>
-                    <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border shadow-sm"><h3 class="font-bold text-sm mb-3" x-text="lang === 'en' ? 'Products Distribution' : 'توزيع المنتجات'"></h3><canvas id="productsChart" height="150"></canvas></div>
-                </div>
-            </div>
-            <div x-show="currentTab === 'sales'" class="space-y-4 fade-in" x-cloak>
-                <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border shadow-sm flex flex-wrap gap-3 items-center">
-                    <input x-model="salesSearch" :placeholder="lang === 'en' ? 'Search customer...' : 'بحث بالزبون...'" class="w-full pr-10 pl-3 py-2 rounded-xl border text-sm flex-1">
-                    <button @click="openModal('sale')" class="bg-brand-600 text-white px-4 py-2 rounded-xl text-sm font-bold" x-text="lang === 'en' ? 'New Invoice' : 'فاتورة جديدة'"></button>
-                </div>
-                <div class="bg-white dark:bg-slate-900 rounded-2xl border shadow-sm overflow-hidden">
-                    <table class="w-full text-right text-xs">
-                        <thead class="bg-slate-50 dark:bg-slate-800 text-slate-500 font-bold"><tr><th class="p-3">#</th><th class="p-3" x-text="lang === 'en' ? 'Customer' : 'الزبون'"></th><th class="p-3" x-text="lang === 'en' ? 'Amount' : 'المبلغ'"></th><th class="p-3" x-text="lang === 'en' ? 'Actions' : 'إجراءات'"></th></tr></thead>
-                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                            <template x-for="s in filteredSales" :key="s.id"><tr><td class="p-3 font-mono" x-text="'#' + String(s.id).slice(-4)"></td><td class="p-3 font-bold" x-text="s.customerName"></td><td class="p-3 font-black text-brand-700" x-text="saleTotal(s).toLocaleString() + ' ' + currency"></td><td class="p-3 flex gap-1.5"><button @click="printReceipt(s)" class="text-slate-400 hover:text-brand-600"><i class="fa-solid fa-print"></i></button><button @click="deleteSale(s)" class="text-slate-400 hover:text-rose-600"><i class="fa-solid fa-trash"></i></button></td></tr></template>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div x-show="currentTab === 'inventory'" class="space-y-4 fade-in" x-cloak>
-                <div class="flex items-center justify-between flex-wrap gap-3"><h3 class="font-bold" x-text="lang === 'en' ? 'Vehicle Inventory' : 'مخزون السيارة'"></h3><button @click="openModal('inventory')" class="bg-brand-600 text-white px-4 py-2 rounded-xl text-sm font-bold" x-text="lang === 'en' ? 'Add Product' : 'إضافة منتج'"></button></div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <template x-for="item in filteredInventory" :key="item.id"><div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border shadow-sm"><h4 class="font-bold text-sm" x-text="item.name"></h4><div class="mt-3 text-xs"><span x-text="lang === 'en' ? 'Stock: ' : 'المخزون: '"></span><span class="font-black" x-text="item.stock"></span></div><button @click="deleteInventory(item.id)" class="text-rose-500 text-xs mt-2" x-text="lang === 'en' ? 'Delete' : 'حذف'"></button></div></template>
-                </div>
-            </div>
-            <div x-show="currentTab === 'customers'" class="space-y-4 fade-in" x-cloak>
-                <div class="flex items-center justify-between flex-wrap gap-3"><input x-model="customersSearch" :placeholder="lang === 'en' ? 'Search...' : 'بحث...'" class="pr-10 pl-3 py-2 rounded-xl border text-sm flex-1 max-w-md"><button @click="openModal('customer')" class="bg-brand-600 text-white px-4 py-2 rounded-xl text-sm font-bold" x-text="lang === 'en' ? 'New Customer' : 'زبون جديد'"></button></div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <template x-for="c in filteredCustomers" :key="c.id"><div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border shadow-sm"><h4 class="font-bold text-sm" x-text="c.name"></h4><button @click="deleteCustomer(c.id)" class="text-rose-500 text-xs mt-2" x-text="lang === 'en' ? 'Delete' : 'حذف'"></button></div></template>
-                </div>
-            </div>
-            <div x-show="currentTab === 'debts'" class="space-y-4 fade-in" x-cloak>
-                <div class="bg-white dark:bg-slate-900 rounded-2xl border shadow-sm overflow-hidden"><table class="w-full text-right text-xs"><thead class="bg-slate-50 dark:bg-slate-800 text-slate-500 font-bold"><tr><th class="p-3" x-text="lang === 'en' ? 'Customer' : 'الزبون'"></th><th class="p-3" x-text="lang === 'en' ? 'Remaining' : 'المتبقي'"></th></tr></thead><tbody class="divide-y divide-slate-100"><template x-for="d in debts" :key="d.id"><tr><td class="p-3 font-bold" x-text="d.customerName"></td><td class="p-3 font-black text-rose-600" x-text="(d.totalAmount - d.paidAmount).toLocaleString() + ' ' + currency"></td></tr></template></tbody></table></div>
-            </div>
-            <div x-show="currentTab === 'expenses'" class="space-y-4 fade-in" x-cloak>
-                <div class="flex items-center justify-between"><h3 class="font-bold" x-text="lang === 'en' ? 'Trip Expenses' : 'مصاريف الجولة'"></h3><button @click="openModal('expense')" class="bg-amber-600 text-white px-4 py-2 rounded-xl text-sm font-bold" x-text="lang === 'en' ? 'New Expense' : 'مصروف جديد'"></button></div>
-                <div class="bg-white dark:bg-slate-900 rounded-2xl border shadow-sm overflow-hidden"><table class="w-full text-right text-xs"><thead class="bg-slate-50 dark:bg-slate-800 text-slate-500 font-bold"><tr><th class="p-3" x-text="lang === 'en' ? 'Type' : 'النوع'"></th><th class="p-3" x-text="lang === 'en' ? 'Amount' : 'المبلغ'"></th></tr></thead><tbody class="divide-y divide-slate-100"><template x-for="e in expenses" :key="e.id"><tr><td class="p-3" x-text="expenseTypeText(e.type)"></td><td class="p-3 font-black text-amber-700" x-text="e.amount.toLocaleString() + ' ' + currency"></td></tr></template></tbody></table></div>
-            </div>
-            <div x-show="currentTab === 'archive'" class="space-y-4 fade-in" x-cloak>
-                <div class="bg-gradient-to-l from-brand-600 to-brand-700 text-white p-5 rounded-2xl shadow-lg"><div class="flex items-center justify-between"><div><h3 class="font-black text-lg" x-text="lang === 'en' ? 'Close Current Shift' : 'إغلاق الجولة الحالية'"></h3></div><button @click="openClotureConfirm()" class="bg-white text-brand-700 px-4 py-2.5 rounded-xl text-sm font-black" x-text="lang === 'en' ? 'Close Now' : 'إغلاق الآن'"></button></div></div>
-            </div>
-        </main>
+        </div>
+
+        <!-- List Sales -->
+        <div class="mt-4">
+            <h2 class="text-lg font-bold mb-2">المبيعات</h2>
+            <ul>
+                <template x-for="s in sales" :key="s.id">
+                    <li class="p-2 border-b flex justify-between">
+                        <span x-text="s.customerName + ' - ' + s.itemName + ' x' + s.quantity"></span>
+                        <span x-text="(s.price * s.quantity) + ' ' + currency"></span>
+                    </li>
+                </template>
+            </ul>
+        </div>
     </div>
-    <div x-show="modals.sale" x-cloak class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3 fade-in"><div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-lg w-full max-h-[95vh] overflow-y-auto"><div class="p-4 border-b flex justify-between items-center"><h3 class="font-black" x-text="lang === 'en' ? 'New Invoice' : 'فاتورة جديدة'"></h3><button @click="closeModal('sale')" class="text-slate-400 hover:text-rose-500"><i class="fa-solid fa-xmark text-lg"></i></button></div><form @submit.prevent="addSale()" class="p-4 space-y-3"><div><label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Customer' : 'الزبون'"></label><input x-model="saleForm.customerName" required class="w-full px-3 py-2 rounded-xl border text-sm"></div><div><label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Product' : 'المنتج'"></label><select x-model="cartItemForm.inventoryId" @change="onCartProductSelect()" class="w-full px-3 py-2 rounded-xl border text-sm"><option value="" x-text="lang === 'en' ? 'Select' : 'اختر'"></option><template x-for="p in inventory" :key="p.id"><option :value="p.id" x-text="p.name + ' - ' + p.sellPrice + ' ' + currency"></option></template></select></div><div class="grid grid-cols-2 gap-2"><div><label class="text-[10px] text-slate-500" x-text="lang === 'en' ? 'Qty' : 'الكمية'"></label><input x-model.number="cartItemForm.quantity" type="number" min="1" class="w-full px-3 py-2 rounded-xl border text-sm"></div><div><label class="text-[10px] text-slate-500" x-text="lang === 'en' ? 'Price' : 'السعر'"></label><input x-model.number="cartItemForm.itemPrice" type="number" step="0.01" class="w-full px-3 py-2 rounded-xl border text-sm"></div></div><button type="button" @click="addToCart()" class="w-full bg-slate-800 text-white py-2 rounded-xl text-xs font-bold" x-text="lang === 'en' ? 'Add to Cart' : 'إضافة للسلة'"></button><div x-show="cart.length > 0" class="bg-brand-50 border border-brand-200 rounded-xl p-2"><template x-for="(item, idx) in cart" :key="idx"><div class="flex justify-between items-center text-xs p-1"><span x-text="item.itemName + ' × ' + item.quantity"></span><span x-text="(item.itemPrice * item.quantity).toLocaleString() + ' ' + currency"></span></div></template></div><div class="bg-brand-600 text-white p-3 rounded-xl flex justify-between items-center"><span x-text="lang === 'en' ? 'Total' : 'الإجمالي'"></span><span x-text="cartTotal.toLocaleString() + ' ' + currency"></span></div><button type="submit" :disabled="cart.length === 0" class="w-full bg-brand-600 text-white py-3 rounded-xl font-bold" x-text="lang === 'en' ? 'Save' : 'حفظ'"></button></form></div></div>
-    <div x-show="modals.inventory" x-cloak class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3 fade-in"><div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full"><div class="p-4 border-b flex justify-between items-center"><h3 class="font-black" x-text="lang === 'en' ? 'Add Product' : 'إضافة منتج'"></h3><button @click="closeModal('inventory')" class="text-slate-400 hover:text-rose-500"><i class="fa-solid fa-xmark"></i></button></div><form @submit.prevent="addInventory()" class="p-4 space-y-3"><div><label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Name' : 'الاسم'"></label><input x-model="invForm.name" required class="w-full px-3 py-2 rounded-xl border text-sm"></div><div class="grid grid-cols-2 gap-3"><div><label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Buy Price' : 'سعر الشراء'"></label><input x-model.number="invForm.buyPrice" type="number" required class="w-full px-3 py-2 rounded-xl border text-sm"></div><div><label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Sell Price' : 'سعر البيع'"></label><input x-model.number="invForm.sellPrice" type="number" required class="w-full px-3 py-2 rounded-xl border text-sm"></div></div><div><label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Stock' : 'الكمية'"></label><input x-model.number="invForm.stock" type="number" required class="w-full px-3 py-2 rounded-xl border text-sm"></div><button type="submit" class="w-full bg-brand-600 text-white py-2.5 rounded-xl font-bold" x-text="lang === 'en' ? 'Save' : 'حفظ'"></button></form></div></div>
-    <div x-show="modals.customer" x-cloak class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3 fade-in"><div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full"><div class="p-4 border-b flex justify-between items-center"><h3 class="font-black" x-text="lang === 'en' ? 'New Customer' : 'زبون جديد'"></h3><button @click="closeModal('customer')" class="text-slate-400 hover:text-rose-500"><i class="fa-solid fa-xmark"></i></button></div><form @submit.prevent="addCustomer()" class="p-4 space-y-3"><div><label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Name' : 'الاسم'"></label><input x-model="custForm.name" required class="w-full px-3 py-2 rounded-xl border text-sm"></div><button type="submit" class="w-full bg-brand-600 text-white py-2.5 rounded-xl font-bold" x-text="lang === 'en' ? 'Save' : 'حفظ'"></button></form></div></div>
-    <div x-show="modals.expense" x-cloak class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3 fade-in"><div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full"><div class="p-4 border-b flex justify-between items-center"><h3 class="font-black" x-text="lang === 'en' ? 'New Expense' : 'مصروف جديد'"></h3><button @click="closeModal('expense')" class="text-slate-400 hover:text-rose-500"><i class="fa-solid fa-xmark"></i></button></div><form @submit.prevent="addExpense()" class="p-4 space-y-3"><div><label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Amount' : 'المبلغ'"></label><input x-model.number="expenseForm.amount" type="number" required class="w-full px-3 py-2 rounded-xl border text-sm"></div><button type="submit" class="w-full bg-amber-600 text-white py-2.5 rounded-xl font-bold" x-text="lang === 'en' ? 'Save' : 'حفظ'"></button></form></div></div>
-    <div id="receiptPrint" class="hidden"></div>
-        <script>
+
+    <script>
         function merchantApp() {
             return {
-                currentTab: 'dashboard',
-                lang: localStorage.getItem('lang') || 'ar',
-                dir: localStorage.getItem('lang') === 'en' ? 'ltr' : 'rtl',
-                darkMode: false,
-                currency: localStorage.getItem('currency') || 'د.ج',
-                online: navigator.onLine,
-                salesSearch: '',
-                customersSearch: '',
-                inventorySearch: '',
-                toasts: [],
-                toastId: 0,
-                notifications: [],
-                sales: [],
-                inventory: [],
-                customers: [],
-                debts: [],
-                debtPayments: [],
-                expenses: [],
-                closedShifts: [],
-                shiftNumber: 1,
-                shiftStartDate: new Date().toISOString().split('T')[0],
-                modals: { sale: false, inventory: false, customer: false, expense: false },
-                saleForm: { customerName: '', inventoryId: '', quantity: 1, itemPrice: 0, paymentMethod: 'cash', paidAmount: 0 },
-                invForm: { name: '', category: '', buyPrice: 0, sellPrice: 0, stock: 0 },
-                custForm: { name: '', phone: '', address: '' },
-                expenseForm: { type: 'fuel', amount: 0, description: '' },
-                shopInfo: { name: 'التاجر المتتقل', phone: '', address: '' },
-                cart: [],
-                cartItemForm: { inventoryId: '', quantity: 1, itemPrice: 0 },
-                cartProductSearch: '',
-                productSuggestions: [],
-                customerSuggestions: [],
-                charts: { sales: null, products: null },
-
-                navItems: [
-                    { id: 'dashboard', icon: 'fa-chart-pie' },
-                    { id: 'sales', icon: 'fa-cart-shopping' },
-                    { id: 'inventory', icon: 'fa-boxes-stacked' },
-                    { id: 'customers', icon: 'fa-address-book' },
-                    { id: 'debts', icon: 'fa-book-bookmark' },
-                    { id: 'expenses', icon: 'fa-gas-pump' },
-                    { id: 'archive', icon: 'fa-box-archive' }
+                currency: 'د.ج',
+                inventory: [
+                    { id: 1, name: 'زيت 5L', price: 1100 },
+                    { id: 2, name: 'سكر 1Kg', price: 130 }
                 ],
-
-                tabTitles: {
-                    ar: { dashboard: 'ملخص المبيعات', sales: 'المبيعات والفواتير', inventory: 'مخزون السيارة', customers: 'الزبائن والملاحظات', debts: 'دفتر الديون', expenses: 'مصاريف الجولة', archive: 'أرشيف الجولات' },
-                    en: { dashboard: 'Dashboard', sales: 'Sales & Invoices', inventory: 'Vehicle Inventory', customers: 'Customers & Notes', debts: 'Debts Book', expenses: 'Trip Expenses', archive: 'Archive' }
+                sales: [],
+                saleForm: { customerName: '', inventoryId: '', quantity: 1 },
+                get totalSalesAmount() {
+                    return this.sales.reduce((sum, s) => sum + (s.price * s.quantity), 0);
                 },
-
-                initApp() {
-                    this.loadFromStorage();
-                    if (this.sales.length === 0) this.seedDemoData();
-                    this.loadDarkMode();
-                    document.documentElement.setAttribute('dir', this.dir);
-                    document.documentElement.setAttribute('lang', this.lang);
-                    this.$watch('currentTab', () => this.$nextTick(() => this.renderCharts()));
-                    this.$watch('sales', () => this.saveToStorage());
-                    this.$watch('inventory', () => this.saveToStorage());
-                    this.$watch('customers', () => this.saveToStorage());
-                    this.$watch('debts', () => this.saveToStorage());
-                    this.$watch('expenses', () => this.saveToStorage());
+                get netProfits() {
+                    return this.totalSalesAmount;
                 },
-
-                saveToStorage() {
-                    try {
-                        localStorage.setItem('merchant_data', JSON.stringify({
-                            sales: this.sales, inventory: this.inventory, customers: this.customers,
-                            debts: this.debts, expenses: this.expenses, shiftNumber: this.shiftNumber,
-                            shopInfo: this.shopInfo
-                        }));
-                    } catch(e) {}
-                },
-
-                loadFromStorage() {
-                    try {
-                        const d = JSON.parse(localStorage.getItem('merchant_data') || '{}');
-                        this.sales = d.sales || [];
-                        this.inventory = d.inventory || [];
-                        this.customers = d.customers || [];
-                        this.debts = d.debts || [];
-                        this.expenses = d.expenses || [];
-                        this.shiftNumber = d.shiftNumber || 1;
-                        this.shopInfo = d.shopInfo || { name: 'التاجر المتنقل', phone: '', address: '' };
-                    } catch(e) {}
-                },
-
-                seedDemoData() {
-                    this.inventory = [
-                        { id: 1, name: 'زيت 5L', buyPrice: 800, sellPrice: 1100, stock: 25 },
-                        { id: 2, name: 'سكر 1Kg', buyPrice: 90, sellPrice: 130, stock: 3 },
-                        { id: 3, name: 'عصير برتقال', buyPrice: 80, sellPrice: 120, stock: 48 }
-                    ];
-                    this.customers = [
-                        { id: 1, name: 'محمد بن علي', phone: '0550112233' },
-                        { id: 2, name: 'أحمد سعيد', phone: '0660445566' }
-                    ];
-                    const today = new Date().toISOString().split('T')[0];
-                    this.sales = [
-                        { id: 1, customerName: 'محمد بن علي', items: [{ inventoryId: 1, itemName: 'زيت 5L', itemPrice: 1100, quantity: 2 }], status: 'paid', date: today }
-                    ];
-                    this.saveToStorage();
-                },
-
-                getBadgeCount(tab) {
-                    if (tab === 'sales') return this.sales.filter(s => s.status === 'pending').length;
-                    if (tab === 'debts') return this.debts.filter(d => d.status !== 'paid').length;
-                    if (tab === 'expenses') return this.expenses.length;
-                    return 0;
-                },
-                statusBadgeClass(st) { return { paid: 'bg-emerald-100 text-emerald-700', pending: 'bg-amber-100 text-amber-700', debt: 'bg-rose-100 text-rose-700' }[st] || 'bg-slate-100 text-slate-600'; },
-                statusText(st) { return { paid: 'مدفوع', pending: 'معلق', debt: 'دين' }[st] || st; },
-                paymentMethodText(m) { return { cash: 'نقدي', credit: 'دين', partial: 'دفع جزئي' }[m] || 'نقدي'; },
-                expenseTypeText(t) { return { fuel: '⛽ وقود', maintenance: '🔧 صيانة', food: '🍽️ طعام', toll: '🛣️ طريق', parking: '🅿️ موقف', phone: '📱 اتصالات', other: '📦 أخرى' }[t] || t; },
-
-                toast(message, type = 'success') {
-                    const id = ++this.toastId;
-                    this.toasts.push({ id, message, type });
-                    setTimeout(() => { this.toasts = this.toasts.filter(t => t.id !== id); }, 3000);
-                },
-
-                get cartTotal() { return this.cart.reduce((sum, i) => sum + (i.itemPrice * i.quantity), 0); },
-                saleTotal(sale) { if (!sale || !sale.items) return 0; return sale.items.reduce((sum, i) => sum + (i.itemPrice * i.quantity), 0); },
-                saleItemsSummary(sale) { if (!sale || !sale.items || sale.items.length === 0) return '—'; if (sale.items.length === 1) return sale.items[0].itemName + ' × ' + sale.items[0].quantity; return sale.items[0].itemName + ' (+' + (sale.items.length - 1) + ')'; },
-
-                onCartProductSelect() {
-                    const p = this.inventory.find(i => i.id == this.cartItemForm.inventoryId);
-                    if (p) this.cartItemForm.itemPrice = p.sellPrice;
-                },
-
-                addToCart() {
-                    const p = this.inventory.find(i => i.id == this.cartItemForm.inventoryId);
-                    if (!p) return this.toast('اختر منتج صحيح', 'error');
-                    const inCart = this.cart.filter(c => c.inventoryId === p.id).reduce((s, c) => s + c.quantity, 0);
-                    if (inCart + this.cartItemForm.quantity > p.stock) return this.toast('الكمية غير متوفرة', 'error');
-                    this.cart.push({ inventoryId: p.id, itemName: p.name, itemPrice: this.cartItemForm.itemPrice || p.sellPrice, quantity: this.cartItemForm.quantity });
-                    this.cartItemForm = { inventoryId: '', quantity: 1, itemPrice: 0 };
-                    this.toast('تمت الإضافة', 'success');
-                },
-
-                get todaySalesCount() { const today = new Date().toISOString().split('T')[0]; return this.sales.filter(s => s.date === today).length; },
-                get totalSalesAmount() { return this.sales.reduce((s, x) => s + this.saleTotal(x), 0); },
-                get netProfits() { return this.sales.reduce((sum, s) => { let saleCost = 0; (s.items || []).forEach(item => { const p = this.inventory.find(i => i.id === item.inventoryId); if (p) saleCost += p.buyPrice * item.quantity; }); return sum + (this.saleTotal(s) - saleCost); }, 0); },
-                get totalExpenses() { return this.expenses.reduce((s, e) => s + Number(e.amount || 0), 0); },
-                get realNetProfit() { return this.netProfits - this.totalExpenses; },
-                get totalPendingDebts() { return this.debts.reduce((s, d) => s + (d.totalAmount - d.paidAmount), 0); },
-
-                get filteredSales() {
-                    return this.sales.filter(s => !this.salesSearch || s.customerName.toLowerCase().includes(this.salesSearch.toLowerCase()));
-                },
-                get filteredCustomers() {
-                    if (!this.customersSearch) return this.customers;
-                    return this.customers.filter(c => c.name.toLowerCase().includes(this.customersSearch.toLowerCase()));
-                },
-                get filteredInventory() {
-                    if (!this.inventorySearch) return this.inventory;
-                    return this.inventory.filter(i => i.name.toLowerCase().includes(this.inventorySearch.toLowerCase()));
-                },
-
-                openModal(type) {
-                    this.modals[type] = true;
-                    if (type === 'sale') { this.cart = []; this.saleForm = { customerName: '', inventoryId: '', quantity: 1, itemPrice: 0, paymentMethod: 'cash', paidAmount: 0 }; }
-                    if (type === 'inventory') this.invForm = { name: '', category: '', buyPrice: 0, sellPrice: 0, stock: 0 };
-                    if (type === 'customer') this.custForm = { name: '', phone: '', address: '' };
-                    if (type === 'expense') this.expenseForm = { type: 'fuel', amount: 0, description: '' };
-                },
-                closeModal(type) { this.modals[type] = false; },
-
                 addSale() {
-                    if (this.cart.length === 0) return this.toast('السلة فارغة', 'error');
-                    if (!this.saleForm.customerName) return this.toast('أدخل اسم الزبون', 'error');
-                    const total = this.cartTotal;
-                    const sale = { id: Date.now(), customerName: this.saleForm.customerName, items: JSON.parse(JSON.stringify(this.cart)), status: 'paid', date: new Date().toISOString().split('T')[0] };
-                    this.sales.unshift(sale);
-                    this.cart.forEach(c => { const p = this.inventory.find(i => i.id === c.inventoryId); if (p) p.stock -= c.quantity; });
-                    this.closeModal('sale');
-                    this.toast('تم حفظ الفاتورة', 'success');
-                },
-
-                deleteSale(sale) {
-                    this.sales = this.sales.filter(s => s.id !== sale.id);
-                    this.toast('تم الحذف', 'success');
-                },
-
-                printReceipt(sale) {
-                    const total = this.saleTotal(sale);
-                    const itemsRows = (sale.items || []).map(i => `<tr><td>${i.itemName}</td><td>${i.quantity}</td><td>${i.itemPrice} ${this.currency}</td></tr>`).join('');
-                    const html = `<div dir="rtl" style="font-family:Cairo,sans-serif;padding:20px;"><h2 style="text-align:center;">${this.shopInfo.name}</h2><p style="text-align:center;">#${String(sale.id).slice(-4)}</p><p>${sale.customerName}</p><hr><table style="width:100%;">${itemsRows}</table><hr><p style="text-align:center;font-size:18px;font-weight:bold;">الإجمالي: ${total} ${this.currency}</p></div>`;
-                    document.getElementById('receiptPrint').innerHTML = html;
-                    window.print();
-                },
-
-                addInventory() {
-                    this.inventory.push({ ...this.invForm, id: Date.now() });
-                    this.closeModal('inventory');
-                    this.toast('تمت الإضافة', 'success');
-                },
-
-                deleteInventory(id) {
-                    this.inventory = this.inventory.filter(i => i.id !== id);
-                    this.toast('تم الحذف', 'success');
-                },
-
-                addCustomer() {
-                    this.customers.push({ ...this.custForm, id: Date.now() });
-                    this.closeModal('customer');
-                    this.toast('تمت الإضافة', 'success');
-                },
-
-                deleteCustomer(id) {
-                    this.customers = this.customers.filter(c => c.id !== id);
-                    this.toast('تم الحذف', 'success');
-                },
-
-                addExpense() {
-                    this.expenses.unshift({ id: Date.now(), type: this.expenseForm.type, amount: Number(this.expenseForm.amount), description: this.expenseForm.description, date: new Date().toISOString().split('T')[0] });
-                    this.closeModal('expense');
-                    this.toast('تم الحفظ', 'success');
-                },
-
-                cycleCurrency() {
-                    const currencies = ['د.ج', '€', '$', 'د.م', 'ر.س'];
-                    let idx = currencies.indexOf(this.currency);
-                    this.currency = currencies[(idx + 1) % currencies.length];
-                    localStorage.setItem('currency', this.currency);
-                },
-
-                toggleLanguage() {
-                    this.lang = this.lang === 'ar' ? 'en' : 'ar';
-                    this.dir = this.lang === 'en' ? 'ltr' : 'rtl';
-                    localStorage.setItem('lang', this.lang);
-                    document.documentElement.setAttribute('dir', this.dir);
-                    document.documentElement.setAttribute('lang', this.lang);
-                },
-
-                toggleDark() {
-                    this.darkMode = !this.darkMode;
-                    document.documentElement.classList.toggle('dark', this.darkMode);
-                    localStorage.setItem('darkMode', this.darkMode);
-                },
-                loadDarkMode() {
-                    this.darkMode = localStorage.getItem('darkMode') === 'true';
-                    document.documentElement.classList.toggle('dark', this.darkMode);
-                },
-
-                renderCharts() {
-                    if (this.currentTab !== 'dashboard') return;
-                    this.$nextTick(() => {
-                        const days = []; const totals = [];
-                        for (let i = 6; i >= 0; i--) {
-                            const d = new Date(); d.setDate(d.getDate() - i);
-                            const dateStr = d.toISOString().split('T')[0];
-                            days.push(d.toLocaleDateString('ar-DZ', { weekday: 'short' }));
-                            totals.push(this.sales.filter(s => s.date === dateStr).reduce((sum, s) => sum + this.saleTotal(s), 0));
-                        }
-                        const ctx1 = document.getElementById('salesChart');
-                        if (ctx1) {
-                            if (this.charts.sales) this.charts.sales.destroy();
-                            this.charts.sales = new Chart(ctx1, { type: 'line', data: { labels: days, datasets: [{ label: 'Sales', data: totals, borderColor: '#16a34a', backgroundColor: 'rgba(22,163,74,0.1)', fill: true, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
-                        }
-                        const productTotals = {};
-                        this.sales.forEach(s => { (s.items || []).forEach(item => { productTotals[item.itemName] = (productTotals[item.itemName] || 0) + item.quantity; }); });
-                        const ctx2 = document.getElementById('productsChart');
-                        if (ctx2) {
-                            if (this.charts.products) this.charts.products.destroy();
-                            this.charts.products = new Chart(ctx2, { type: 'doughnut', data: { labels: Object.keys(productTotals), datasets: [{ data: Object.values(productTotals), backgroundColor: ['#16a34a', '#22c55e', '#f59e0b', '#3b82f6'] }] }, options: { responsive: true, maintainAspectRatio: false } });
-                        }
+                    if (!this.saleForm.customerName || !this.saleForm.inventoryId) return;
+                    const product = this.inventory.find(p => p.id == this.saleForm.inventoryId);
+                    if (!product) return;
+                    this.sales.push({
+                        id: Date.now(),
+                        customerName: this.saleForm.customerName,
+                        itemName: product.name,
+                        price: product.price,
+                        quantity: this.saleForm.quantity
                     });
+                    this.saleForm = { customerName: '', inventoryId: '', quantity: 1 };
                 }
             }
         }
     </script>
 </body>
 </html>
-    
