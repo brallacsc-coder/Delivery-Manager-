@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تطبيق مبيعات التاجر المتنقل | Mobile Merchant POS</title>
+    <title>التاجر المتنقل | Mobile Merchant</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
@@ -11,17 +11,8 @@
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
     <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: { brand: { 50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d', } },
-                    fontFamily: { sans: ['Cairo', 'sans-serif'] }
-                }
-            }
-        }
+        tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: { 50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d', } }, fontFamily: { sans: ['Cairo', 'sans-serif'] } } } }
     </script>
     <style>
         body { font-family: 'Cairo', sans-serif; }
@@ -44,137 +35,38 @@
     </style>
 </head>
 <body class="text-slate-800 dark:text-slate-100 bg-slate-100 dark:bg-slate-950 antialiased min-h-screen flex flex-col md:flex-row pb-16 md:pb-0" x-data="merchantApp()" x-init="initApp()">
-
-    <!-- SIDEBAR -->
+    
     <aside class="w-full md:w-64 bg-slate-900 dark:bg-black text-slate-300 flex-shrink-0 z-20 shadow-xl">
         <div class="p-4 flex items-center justify-between border-b border-slate-800">
             <div class="flex items-center space-x-3 space-x-reverse">
-                <div class="bg-brand-600 text-white p-2.5 rounded-xl shadow-lg shadow-brand-500/30">
-                    <i class="fa-solid fa-van-shuttle text-xl"></i>
-                </div>
-                <div>
-                    <h1 class="font-black text-lg text-white leading-tight">التاجر المتنقل</h1>
-                    <span class="text-xs text-brand-400 font-medium">نظام المبيعات والجولات</span>
-                </div>
+                <div class="bg-brand-600 text-white p-2.5 rounded-xl shadow-lg shadow-brand-500/30"><i class="fa-solid fa-van-shuttle text-xl"></i></div>
+                <div><h1 class="font-black text-lg text-white leading-tight" x-text="lang==='en'?'Mobile Merchant':'التاجر المتنقل'"></h1><span class="text-xs text-brand-400 font-medium" x-text="lang==='en'?'Sales & Trips':'نظام المبيعات والجولات'"></span></div>
             </div>
         </div>
-
         <nav class="hidden md:block p-3 space-y-1">
             <template x-for="item in navItems" :key="item.id">
-                <button @click="currentTab = item.id" 
-                        :class="currentTab === item.id ? 'bg-brand-600 text-white shadow-md' : 'hover:bg-slate-800 text-slate-400 hover:text-slate-200'" 
-                        class="w-full flex items-center px-4 py-3 rounded-xl transition font-bold justify-between">
-                    <div class="flex items-center">
-                        <i class="fa-solid w-6 text-lg" :class="item.icon"></i>
-                        <span class="mr-3" x-text="$t_title(item.id)"></span>
-                    </div>
-                    <span x-show="getBadgeCount(item.id) > 0" 
-                          :class="item.id === 'debts' ? 'bg-rose-500' : 'bg-amber-500'"
-                          class="text-white text-xs px-2 py-0.5 rounded-full font-bold"
-                          x-text="getBadgeCount(item.id)"></span>
+                <button @click="currentTab = item.id" :class="currentTab === item.id ? 'bg-brand-600 text-white shadow-md' : 'hover:bg-slate-800 text-slate-400 hover:text-slate-200'" class="w-full flex items-center px-4 py-3 rounded-xl transition font-bold justify-between">
+                    <div class="flex items-center"><i class="fa-solid w-6 text-lg" :class="item.icon"></i><span class="mr-3" x-text="$t_title(item.id)"></span></div>
                 </button>
             </template>
-
             <div class="pt-3 mt-3 border-t border-slate-800">
-                <button @click="toggleDark()" class="w-full flex items-center px-4 py-3 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition font-bold">
-                    <i class="fa-solid w-6 text-lg" :class="darkMode ? 'fa-sun' : 'fa-moon'"></i>
-                    <span class="mr-3" x-text="lang === 'en' ? (darkMode ? 'Light Mode' : 'Dark Mode') : (darkMode ? 'الوضع النهاري' : 'الوضع الليلي')"></span>
-                </button>
-                <button @click="toggleLanguage()" class="w-full flex items-center px-4 py-3 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition font-bold">
-                    <i class="fa-solid fa-language w-6 text-lg"></i>
-                    <span class="mr-3" x-text="lang === 'ar' ? 'English (EN)' : 'العربية (AR)'"></span>
-                </button>
-                <button @click="openSettings()" class="w-full flex items-center px-4 py-3 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition font-bold">
-                    <i class="fa-solid fa-gear w-6 text-lg"></i>
-                    <span class="mr-3" x-text="lang === 'en' ? 'Shop Settings' : 'إعدادات المحل'"></span>
-                </button>
-                <button @click="exportData()" class="w-full flex items-center px-4 py-3 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition font-bold">
-                    <i class="fa-solid fa-download w-6 text-lg"></i>
-                    <span class="mr-3" x-text="lang === 'en' ? 'Backup' : 'نسخة احتياطية'"></span>
-                </button>
-            </div>
-            <div class="mt-3 p-3 rounded-xl bg-slate-800/50 text-xs flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full" :class="online ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'"></span>
-                <span x-text="online ? (lang === 'en' ? 'Online' : 'متصل') : (lang === 'en' ? 'Offline' : 'غير متصل')"></span>
+                <button @click="toggleDark()" class="w-full flex items-center px-4 py-3 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition font-bold"><i class="fa-solid w-6 text-lg" :class="darkMode ? 'fa-sun' : 'fa-moon'"></i><span class="mr-3" x-text="lang === 'en' ? (darkMode ? 'Light Mode' : 'Dark Mode') : (darkMode ? 'الوضع النهاري' : 'الوضع الليلي')"></span></button>
+                <button @click="openSettings()" class="w-full flex items-center px-4 py-3 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition font-bold"><i class="fa-solid fa-gear w-6 text-lg"></i><span class="mr-3" x-text="lang === 'en' ? 'Settings' : 'الإعدادات'"></span></button>
             </div>
         </nav>
     </aside>
 
-    <!-- Mobile Bottom Nav -->
-    <div class="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900 dark:bg-black border-t border-slate-800 z-40 flex justify-around p-1.5 text-slate-400 text-[10px] font-bold overflow-x-auto">
-        <template x-for="item in navItems" :key="'m-' + item.id">
-            <button @click="currentTab = item.id" :class="currentTab === item.id ? 'text-brand-400' : ''" class="flex flex-col items-center py-1 relative px-1.5 flex-shrink-0">
-                <i class="fa-solid text-base mb-0.5" :class="item.icon"></i>
-                <span x-text="$t_title(item.id)"></span>
-                <span x-show="getBadgeCount(item.id) > 0" 
-                      :class="item.id === 'debts' ? 'bg-rose-500' : 'bg-amber-500'"
-                      class="absolute -top-0.5 right-0 text-white text-[8px] w-3.5 h-3.5 rounded-full flex items-center justify-center font-bold"
-                      x-text="getBadgeCount(item.id)"></span>
-            </button>
-        </template>
-    </div>
-
-    <!-- MAIN -->
     <div class="flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden">
         <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-10 px-3 py-2.5 sm:px-6 sm:py-3 flex items-center justify-between shadow-sm gap-2">
-            <h2 class="text-base sm:text-xl font-black flex items-center gap-2 truncate">
-                <span x-text="$t_title(currentTab)"></span>
-            </h2>
+            <h2 class="text-base sm:text-xl font-black flex items-center gap-2 truncate"><span x-text="$t_title(currentTab)"></span></h2>
             <div class="flex items-center space-x-1.5 sm:space-x-2 space-x-reverse flex-shrink-0">
-                <div class="hidden sm:flex items-center gap-1.5 bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 px-2.5 py-1.5 rounded-xl text-[10px] font-bold">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span x-text="lang === 'en' ? 'Shift ' + shiftNumber : 'جولة ' + shiftNumber"></span>
-                </div>
-                <button @click="cycleCurrency()" class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2.5 py-2 rounded-xl text-xs font-bold transition hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center gap-1" title="تغيير العملة">
-                    <i class="fa-solid fa-money-bill-wave text-brand-600"></i>
-                    <span x-text="currency"></span>
-                </button>
-                <button @click="toggleLanguage()" class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2.5 py-2 rounded-xl text-xs font-bold transition hover:bg-slate-200 dark:hover:bg-slate-700" title="تغيير اللغة">
-                    <span x-text="lang === 'ar' ? 'EN' : 'AR'"></span>
-                </button>
-                <div class="relative" x-data="{ open: false }">
-                    <button @click="open = !open" class="relative p-2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition">
-                        <i class="fa-regular fa-bell text-lg sm:text-xl"></i>
-                        <span x-show="unreadCount > 0" class="absolute top-1 right-1 w-2.5 h-2.5 bg-rose-500 rounded-full ring-2 ring-white dark:ring-slate-900"></span>
-                    </button>
-                    <div x-show="open" @click.outside="open = false" x-transition x-cloak class="absolute left-0 mt-2 w-72 sm:w-80 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 py-2 z-50">
-                        <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
-                            <h3 class="font-bold text-xs" x-text="lang === 'en' ? 'Notifications' : 'تنبيهات'"></h3>
-                            <button @click="markAllRead()" class="text-[10px] text-brand-600 hover:underline" x-text="lang === 'en' ? 'Clear all' : 'إخفاء الكل'"></button>
-                        </div>
-                        <div class="max-h-72 overflow-y-auto divide-y divide-slate-50 dark:divide-slate-700">
-                            <template x-for="(n, i) in notifications" :key="i">
-                                <div class="p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition flex items-start gap-2.5" :class="{'bg-green-50/40 dark:bg-green-900/10': !n.read}">
-                                    <div class="p-2 rounded-lg text-white text-xs flex-shrink-0 mt-0.5" :class="{'bg-amber-500': n.type==='stock','bg-brand-600': n.type==='sale','bg-rose-500': n.type==='debt','bg-blue-500': n.type==='system'}">
-                                        <i class="fa-solid" :class="{'fa-triangle-exclamation': n.type==='stock','fa-cart-check': n.type==='sale','fa-file-invoice-dollar': n.type==='debt','fa-circle-info': n.type==='system'}"></i>
-                                    </div>
-                                    <div class="flex-1">
-                                        <p class="text-xs font-bold" x-text="n.title"></p>
-                                        <p class="text-[11px] text-slate-500 mt-0.5" x-text="n.message"></p>
-                                        <span class="text-[9px] text-slate-400 mt-1 block" x-text="n.time"></span>
-                                    </div>
-                                </div>
-                            </template>
-                            <template x-if="notifications.length === 0">
-                                <div class="p-6 text-center text-slate-400 text-xs">
-                                    <i class="fa-regular fa-bell-slash text-3xl mb-2 block opacity-30"></i>
-                                    <span x-text="lang === 'en' ? 'No notifications' : 'لا توجد إشعارات'"></span>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
-                </div>
-                <button @click="openModal('sale')" class="bg-brand-600 hover:bg-brand-700 text-white px-2.5 sm:px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md shadow-brand-500/20 transition">
-                    <i class="fa-solid fa-plus"></i>
-                    <span class="hidden sm:inline" x-text="lang === 'en' ? 'New Invoice' : 'فاتورة جديدة'"></span>
-                    <span class="sm:hidden" x-text="lang === 'en' ? 'Sell' : 'بيع'"></span>
-                </button>
+                <button @click="cycleCurrency()" class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2.5 py-2 rounded-xl text-xs font-bold"><i class="fa-solid fa-money-bill-wave text-brand-600"></i> <span x-text="currency"></span></button>
+                <button @click="toggleLanguage()" class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2.5 py-2 rounded-xl text-xs font-bold"><span x-text="lang === 'ar' ? 'EN' : 'AR'"></span></button>
+                <button @click="openModal('sale')" class="bg-brand-600 hover:bg-brand-700 text-white px-2.5 sm:px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5"><i class="fa-solid fa-plus"></i><span x-text="lang === 'en' ? 'New Invoice' : 'فاتورة'"></span></button>
             </div>
         </header>
-
         <main class="flex-1 p-3 sm:p-6 space-y-5">
-                    <!-- DASHBOARD -->
-            <div x-show="currentTab === 'dashboard'" class="space-y-5 fade-in" x-cloak>
+                        <div x-show="currentTab === 'dashboard'" class="space-y-5 fade-in" x-cloak>
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
                     <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
                         <div class="flex items-center justify-between">
@@ -227,11 +119,10 @@
                         <table class="w-full text-right text-xs">
                             <thead class="bg-slate-50 dark:bg-slate-800 text-slate-500 font-bold border-b border-slate-100 dark:border-slate-700">
                                 <tr>
-                                    <th class="p-2.5" x-text="lang === 'en' ? '#' : 'رقم'"></th>
+                                    <th class="p-2.5">#</th>
                                     <th class="p-2.5" x-text="lang === 'en' ? 'Customer' : 'الزبون'"></th>
                                     <th class="p-2.5" x-text="lang === 'en' ? 'Products' : 'المنتجات'"></th>
                                     <th class="p-2.5" x-text="lang === 'en' ? 'Amount' : 'المبلغ'"></th>
-                                    <th class="p-2.5" x-text="lang === 'en' ? 'Actions' : 'إجراءات'"></th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -241,41 +132,14 @@
                                         <td class="p-2.5 font-bold" x-text="s.customerName"></td>
                                         <td class="p-2.5"><span x-text="saleItemsSummary(s)"></span></td>
                                         <td class="p-2.5 font-black text-brand-700" x-text="saleTotal(s).toLocaleString() + ' ' + currency"></td>
-                                        <td class="p-2.5 flex gap-1.5">
-                                            <button @click="printReceipt(s)" class="text-slate-400 hover:text-brand-600"><i class="fa-solid fa-print"></i></button>
-                                            <button @click="deleteSale(s)" class="text-slate-400 hover:text-rose-600"><i class="fa-solid fa-trash"></i></button>
-                                        </td>
                                     </tr>
                                 </template>
                             </tbody>
                         </table>
                     </div>
                 </div>
-
-                <div class="bg-slate-900 dark:bg-black text-white p-5 rounded-2xl shadow-lg space-y-3">
-                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                        <div class="flex items-center gap-2"><i class="fa-solid fa-boxes-packing text-amber-400 text-lg"></i><h3 class="font-bold text-sm" x-text="lang === 'en' ? 'Vehicle Stock Status' : 'حالة السلع بالسيارة'"></h3></div>
-                        <span class="text-xs bg-slate-800 text-amber-400 px-2.5 py-1 rounded-xl font-bold" x-text="inventory.length + (lang === 'en' ? ' Items' : ' صنف')"></span>
-                    </div>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 text-xs">
-                        <template x-for="item in inventory.slice(0, 4)" :key="item.id">
-                            <div class="bg-slate-800/80 p-3 rounded-xl border" :class="item.stock < 5 ? 'border-rose-500/50' : 'border-slate-700'">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <template x-if="item.image"><img :src="item.image" class="w-8 h-8 rounded-lg object-cover"></template>
-                                    <template x-if="!item.image"><div class="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center"><i class="fa-solid fa-box text-slate-500 text-xs"></i></div></template>
-                                    <p class="font-bold truncate flex-1" x-text="item.name"></p>
-                                </div>
-                                <div class="flex items-center justify-between mt-2">
-                                    <span class="text-[10px] text-slate-400" x-text="lang === 'en' ? 'Remaining' : 'المتبقي'"></span>
-                                    <span class="font-black" :class="item.stock < 5 ? 'text-rose-400' : 'text-emerald-400'" x-text="item.stock"></span>
-                                </div>
-                            </div>
-                        </template>
-                    </div>
-                </div>
             </div>
-
-            <!-- SALES -->
+                    <!-- SALES TAB -->
             <div x-show="currentTab === 'sales'" class="space-y-4 fade-in" x-cloak>
                 <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-wrap gap-3 items-center">
                     <div class="relative flex-1 min-w-[200px]">
@@ -284,6 +148,7 @@
                     </div>
                     <button @click="openModal('sale')" class="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-xl text-sm font-bold"><i class="fa-solid fa-plus mr-1"></i> <span x-text="lang === 'en' ? 'New Invoice' : 'فاتورة جديدة'"></span></button>
                 </div>
+
                 <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full text-right text-xs">
@@ -291,22 +156,26 @@
                                 <tr>
                                     <th class="p-3">#</th>
                                     <th class="p-3" x-text="lang === 'en' ? 'Customer' : 'الزبون'"></th>
+                                    <th class="p-3" x-text="lang === 'en' ? 'Products' : 'المنتجات'"></th>
                                     <th class="p-3" x-text="lang === 'en' ? 'Amount' : 'المبلغ'"></th>
                                     <th class="p-3" x-text="lang === 'en' ? 'Actions' : 'إجراءات'"></th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                                 <template x-for="s in filteredSales" :key="s.id">
-                                    <tr>
-                                        <td class="p-3 font-mono" x-text="'#' + String(s.id).slice(-4)"></td>
+                                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                                        <td class="p-3 font-mono text-slate-400" x-text="'#' + String(s.id).slice(-4)"></td>
                                         <td class="p-3 font-bold" x-text="s.customerName"></td>
+                                        <td class="p-3"><span x-text="saleItemsSummary(s)"></span></td>
                                         <td class="p-3 font-black text-brand-700" x-text="saleTotal(s).toLocaleString() + ' ' + currency"></td>
                                         <td class="p-3 flex gap-1.5">
-                                            <button @click="printReceipt(s)" class="text-slate-400 hover:text-brand-600"><i class="fa-solid fa-print"></i></button>
-                                            <button @click="openEditSale(s)" class="text-slate-400 hover:text-blue-600"><i class="fa-solid fa-pen"></i></button>
-                                            <button @click="deleteSale(s)" class="text-slate-400 hover:text-rose-600"><i class="fa-solid fa-trash"></i></button>
+                                            <button @click="printReceipt(s)" class="text-slate-400 hover:text-brand-600" title="طباعة"><i class="fa-solid fa-print"></i></button>
+                                            <button @click="deleteSale(s)" class="text-slate-400 hover:text-rose-600" title="حذف"><i class="fa-solid fa-trash"></i></button>
                                         </td>
                                     </tr>
+                                </template>
+                                <template x-if="filteredSales.length === 0">
+                                    <tr><td colspan="5" class="p-8 text-center text-slate-400" x-text="lang === 'en' ? 'No sales found' : 'لا توجد مبيعات'"></td></tr>
                                 </template>
                             </tbody>
                         </table>
@@ -314,142 +183,141 @@
                 </div>
             </div>
 
-            <!-- INVENTORY -->
+            <!-- INVENTORY TAB -->
             <div x-show="currentTab === 'inventory'" class="space-y-4 fade-in" x-cloak>
                 <div class="flex items-center justify-between flex-wrap gap-3">
                     <h3 class="font-bold" x-text="lang === 'en' ? 'Vehicle Inventory' : 'مخزون السيارة'"></h3>
-                    <button @click="openModal('inventory')" class="bg-brand-600 text-white px-4 py-2 rounded-xl text-sm font-bold"><i class="fa-solid fa-plus mr-1"></i> <span x-text="lang === 'en' ? 'Add Product' : 'إضافة منتج'"></span></button>
+                    <button @click="openModal('inventory')" class="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-xl text-sm font-bold"><i class="fa-solid fa-plus mr-1"></i> <span x-text="lang === 'en' ? 'Add Product' : 'إضافة منتج'"></span></button>
+                </div>
+                <div class="relative">
+                    <i class="fa-solid fa-search absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input x-model="inventorySearch" :placeholder="lang === 'en' ? 'Search product...' : 'بحث بالمنتج...'" class="w-full pr-10 pl-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm">
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     <template x-for="item in filteredInventory" :key="item.id">
                         <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border shadow-sm" :class="item.stock < 5 ? 'border-rose-300' : 'border-slate-100 dark:border-slate-800'">
                             <div class="flex items-start gap-3">
                                 <template x-if="item.image"><img :src="item.image" class="w-14 h-14 rounded-xl object-cover"></template>
-                                <template x-if="!item.image"><div class="w-14 h-14 rounded-xl bg-slate-100 flex items-center justify-center"><i class="fa-solid fa-image text-slate-400"></i></div></template>
-                                <div class="flex-1">
-                                    <h4 class="font-bold text-sm" x-text="item.name"></h4>
-                                    <p class="text-[11px] text-slate-400" x-text="item.category || (lang === 'en' ? 'General' : 'عام')"></p>
+                                <template x-if="!item.image"><div class="w-14 h-14 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center"><i class="fa-solid fa-image text-slate-400"></i></div></template>
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="font-bold text-sm truncate" x-text="item.name"></h4>
+                                    <p class="text-[11px] text-slate-400 mt-0.5" x-text="item.category || (lang === 'en' ? 'General' : 'عام')"></p>
                                 </div>
                                 <button @click="deleteInventory(item.id)" class="text-slate-300 hover:text-rose-500"><i class="fa-solid fa-trash text-xs"></i></button>
                             </div>
                             <div class="grid grid-cols-2 gap-2 mt-3 text-xs">
-                                <div class="bg-slate-50 dark:bg-slate-800 rounded-lg p-2"><span class="text-[10px] text-slate-400 block" x-text="lang === 'en' ? 'Sell Price' : 'سعر البيع'"></span><span class="font-black text-brand-700" x-text="item.sellPrice.toLocaleString() + ' ' + currency"></span></div>
-                                <div class="bg-slate-50 dark:bg-slate-800 rounded-lg p-2"><span class="text-[10px] text-slate-400 block" x-text="lang === 'en' ? 'Buy Price' : 'سعر الشراء'"></span><span class="font-black text-slate-600" x-text="(item.buyPrice || 0).toLocaleString() + ' ' + currency"></span></div>
+                                <div class="bg-slate-50 dark:bg-slate-800 rounded-lg p-2"><span class="text-[10px] text-slate-400 block" x-text="lang === 'en' ? 'Sell' : 'بيع'"></span><span class="font-black text-brand-700" x-text="item.sellPrice.toLocaleString() + ' ' + currency"></span></div>
+                                <div class="bg-slate-50 dark:bg-slate-800 rounded-lg p-2"><span class="text-[10px] text-slate-400 block" x-text="lang === 'en' ? 'Buy' : 'شراء'"></span><span class="font-black text-slate-600" x-text="(item.buyPrice || 0).toLocaleString() + ' ' + currency"></span></div>
+                            </div>
+                            <div class="flex items-center justify-between mt-3">
+                                <span class="text-xs text-slate-500" x-text="lang === 'en' ? 'Stock:' : 'المخزون:'"></span>
+                                <span class="text-sm font-black px-2 py-0.5 rounded-lg" :class="item.stock < 5 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'" x-text="item.stock"></span>
                             </div>
                             <div class="flex items-center gap-1 mt-2">
-                                <button @click="adjustStock(item.id, -1)" class="flex-1 bg-slate-100 py-1.5 rounded-lg text-xs font-bold">−</button>
-                                <button @click="adjustStock(item.id, 1)" class="flex-1 bg-slate-100 py-1.5 rounded-lg text-xs font-bold">+</button>
-                                <button @click="openEditInventory(item)" class="bg-blue-100 text-blue-700 px-2 py-1.5 rounded-lg text-xs"><i class="fa-solid fa-pen"></i></button>
+                                <button @click="adjustStock(item.id, -1)" class="flex-1 bg-slate-100 dark:bg-slate-800 py-1.5 rounded-lg text-xs font-bold">−</button>
+                                <button @click="adjustStock(item.id, 1)" class="flex-1 bg-slate-100 dark:bg-slate-800 py-1.5 rounded-lg text-xs font-bold">+</button>
                             </div>
                         </div>
                     </template>
                 </div>
             </div>
-
-            <!-- CUSTOMERS -->
+                        <!-- CUSTOMERS TAB -->
             <div x-show="currentTab === 'customers'" class="space-y-4 fade-in" x-cloak>
                 <div class="flex items-center justify-between flex-wrap gap-3">
-                    <input x-model="customersSearch" :placeholder="lang === 'en' ? 'Search by name or phone...' : 'بحث بالاسم أو الهاتف...'" class="pr-10 pl-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm flex-1 max-w-md">
-                    <button @click="openModal('customer')" class="bg-brand-600 text-white px-4 py-2 rounded-xl text-sm font-bold"><i class="fa-solid fa-user-plus mr-1"></i> <span x-text="lang === 'en' ? 'New Customer' : 'زبون جديد'"></span></button>
+                    <div class="relative flex-1 min-w-[200px] max-w-md">
+                        <i class="fa-solid fa-search absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input x-model="customersSearch" :placeholder="lang === 'en' ? 'Search customer...' : 'بحث بالزبون...'" class="w-full pr-10 pl-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm">
+                    </div>
+                    <button @click="openModal('customer')" class="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-xl text-sm font-bold"><i class="fa-solid fa-user-plus mr-1"></i> <span x-text="lang === 'en' ? 'New Customer' : 'زبون جديد'"></span></button>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     <template x-for="c in filteredCustomers" :key="c.id">
                         <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center font-black"><span x-text="c.name.charAt(0)"></span></div>
-                                <div class="flex-1"><h4 class="font-bold text-sm" x-text="c.name"></h4><p class="text-[11px] text-slate-400" x-text="c.phone || (lang === 'en' ? 'No phone' : 'بدون هاتف')"></p></div>
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-brand-100 dark:bg-brand-900/30 text-brand-700 flex items-center justify-center font-black"><span x-text="c.name.charAt(0)"></span></div>
+                                    <div><h4 class="font-bold text-sm" x-text="c.name"></h4><p class="text-[11px] text-slate-400" x-text="c.phone || (lang === 'en' ? 'No phone' : 'بدون هاتف')"></p></div>
+                                </div>
                                 <button @click="deleteCustomer(c.id)" class="text-slate-300 hover:text-rose-500"><i class="fa-solid fa-trash text-xs"></i></button>
                             </div>
-                            <div class="mt-3 text-xs space-y-1 border-t border-slate-100 pt-2">
-                                <div class="flex justify-between"><span class="text-slate-500" x-text="$t('totalPurchase')"></span><span class="font-bold" x-text="getCustomerTotal(c.id).toLocaleString() + ' ' + currency"></span></div>
-                                <div class="flex justify-between"><span class="text-slate-500" x-text="$t('remainingDebts')"></span><span class="font-bold" :class="getCustomerDebt(c.id) > 0 ? 'text-rose-600' : 'text-emerald-600'" x-text="getCustomerDebt(c.id).toLocaleString() + ' ' + currency"></span></div>
+                            <div class="mt-3 text-xs space-y-1 border-t border-slate-100 dark:border-slate-800 pt-2">
+                                <div class="flex justify-between"><span class="text-slate-500" x-text="lang === 'en' ? 'Total:' : 'إجمالي الشراء:'"></span><span class="font-bold" x-text="getCustomerTotal(c.id).toLocaleString() + ' ' + currency"></span></div>
+                                <div class="flex justify-between"><span class="text-slate-500" x-text="lang === 'en' ? 'Debts:' : 'ديون:'"></span><span class="font-bold" :class="getCustomerDebt(c.id) > 0 ? 'text-rose-600' : 'text-emerald-600'" x-text="getCustomerDebt(c.id).toLocaleString() + ' ' + currency"></span></div>
                             </div>
                             <div class="flex gap-2 mt-3">
-                                <button @click="viewCustomerHistory(c)" class="flex-1 bg-slate-100 text-xs py-1.5 rounded-lg font-bold"><i class="fa-solid fa-list mr-1"></i> <span x-text="$t('history')"></span></button>
-                                <button x-show="c.phone" @click="callCustomer(c.phone)" class="bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-lg"><i class="fa-solid fa-phone text-xs"></i></button>
+                                <button @click="viewCustomerHistory(c)" class="flex-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-xs py-1.5 rounded-lg font-bold"><i class="fa-solid fa-list mr-1"></i> <span x-text="lang === 'en' ? 'History' : 'السجل'"></span></button>
+                                <button x-show="c.phone" @click="callCustomer(c.phone)" class="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 px-3 py-1.5 rounded-lg"><i class="fa-solid fa-phone text-xs"></i></button>
                             </div>
                         </div>
                     </template>
                 </div>
             </div>
 
-            <!-- DEBTS -->
+            <!-- DEBTS TAB -->
             <div x-show="currentTab === 'debts'" class="space-y-4 fade-in" x-cloak>
-                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
-                    <table class="w-full text-right text-xs">
-                        <thead class="bg-slate-50 dark:bg-slate-800 text-slate-500 font-bold">
-                            <tr>
-                                <th class="p-3" x-text="lang === 'en' ? 'Customer' : 'الزبون'"></th>
-                                <th class="p-3" x-text="lang === 'en' ? 'Total' : 'المبلغ'"></th>
-                                <th class="p-3" x-text="lang === 'en' ? 'Paid' : 'المدفوع'"></th>
-                                <th class="p-3" x-text="lang === 'en' ? 'Remaining' : 'المتبقي'"></th>
-                                <th class="p-3" x-text="lang === 'en' ? 'Actions' : 'إجراءات'"></th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                            <template x-for="d in debts" :key="d.id">
-                                <tr>
-                                    <td class="p-3 font-bold" x-text="d.customerName"></td>
-                                    <td class="p-3" x-text="d.totalAmount.toLocaleString() + ' ' + currency"></td>
-                                    <td class="p-3 text-emerald-600 font-bold" x-text="d.paidAmount.toLocaleString() + ' ' + currency"></td>
-                                    <td class="p-3 font-black text-rose-600" x-text="(d.totalAmount - d.paidAmount).toLocaleString() + ' ' + currency"></td>
-                                    <td class="p-3 flex gap-2">
-                                        <button x-show="d.status !== 'paid'" @click="openPaymentModal(d)" class="bg-brand-600 text-white px-2 py-1 rounded-lg text-[10px] font-bold" x-text="lang === 'en' ? 'Pay' : 'دفع'"></button>
-                                    </td>
-                                </tr>
-                            </template>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- EXPENSES -->
-            <div x-show="currentTab === 'expenses'" class="space-y-4 fade-in" x-cloak>
-                <div class="flex items-center justify-between">
-                    <h3 class="font-bold" x-text="lang === 'en' ? 'Trip Expenses' : 'مصاريف الجولة'"></h3>
-                    <button @click="openModal('expense')" class="bg-amber-600 text-white px-4 py-2 rounded-xl text-sm font-bold"><i class="fa-solid fa-plus mr-1"></i> <span x-text="lang === 'en' ? 'New Expense' : 'مصروف جديد'"></span></button>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm"><span class="text-[11px] text-slate-400 font-bold" x-text="lang === 'en' ? 'Total Debts' : 'إجمالي الديون'"></span><h3 class="text-xl font-black text-rose-600 mt-1" x-text="totalPendingDebts.toLocaleString() + ' ' + currency"></h3></div>
+                    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm"><span class="text-[11px] text-slate-400 font-bold" x-text="lang === 'en' ? 'Paid' : 'مدفوع'"></span><h3 class="text-xl font-black text-emerald-600 mt-1" x-text="totalPaidDebts.toLocaleString() + ' ' + currency"></h3></div>
+                    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm"><span class="text-[11px] text-slate-400 font-bold" x-text="lang === 'en' ? 'Pending Count' : 'عدد الديون القائمة'"></span><h3 class="text-xl font-black mt-1" x-text="pendingDebtsCount"></h3></div>
                 </div>
                 <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
-                    <table class="w-full text-right text-xs">
-                        <thead class="bg-slate-50 dark:bg-slate-800 text-slate-500 font-bold">
-                            <tr>
-                                <th class="p-3" x-text="lang === 'en' ? 'Type' : 'النوع'"></th>
-                                <th class="p-3" x-text="lang === 'en' ? 'Amount' : 'المبلغ'"></th>
-                                <th class="p-3" x-text="lang === 'en' ? 'Actions' : 'إجراءات'"></th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                            <template x-for="e in expenses" :key="e.id">
-                                <tr>
-                                    <td class="p-3" x-text="expenseTypeText(e.type)"></td>
-                                    <td class="p-3 font-black text-amber-700" x-text="e.amount.toLocaleString() + ' ' + currency"></td>
-                                    <td class="p-3"><button @click="deleteExpense(e)" class="text-slate-400 hover:text-rose-600"><i class="fa-solid fa-trash"></i></button></td>
-                                </tr>
-                            </template>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- ARCHIVE -->
-            <div x-show="currentTab === 'archive'" class="space-y-4 fade-in" x-cloak>
-                <div class="bg-gradient-to-l from-brand-600 to-brand-700 text-white p-5 rounded-2xl shadow-lg">
-                    <div class="flex items-center justify-between">
-                        <div><h3 class="font-black text-lg" x-text="lang === 'en' ? 'Close Current Shift' : 'إغلاق الجولة الحالية'"></h3></div>
-                        <button @click="openClotureConfirm()" class="bg-white text-brand-700 px-4 py-2.5 rounded-xl text-sm font-black"><i class="fa-solid fa-lock mr-1"></i> <span x-text="lang === 'en' ? 'Close Now' : 'إغلاق الآن'"></span></button>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-xs">
+                            <thead class="bg-slate-50 dark:bg-slate-800 text-slate-500 font-bold"><tr><th class="p-3" x-text="lang === 'en' ? 'Customer' : 'الزبون'"></th><th class="p-3" x-text="lang === 'en' ? 'Total' : 'الأصلي'"></th><th class="p-3" x-text="lang === 'en' ? 'Paid' : 'المدفوع'"></th><th class="p-3" x-text="lang === 'en' ? 'Remaining' : 'المتبقي'"></th><th class="p-3" x-text="lang === 'en' ? 'Actions' : 'إجراءات'"></th></tr></thead>
+                            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                                <template x-for="d in debts" :key="d.id">
+                                    <tr><td class="p-3 font-bold" x-text="d.customerName"></td><td class="p-3" x-text="d.totalAmount.toLocaleString() + ' ' + currency"></td><td class="p-3 text-emerald-600 font-bold" x-text="d.paidAmount.toLocaleString() + ' ' + currency"></td><td class="p-3 font-black text-rose-600" x-text="(d.totalAmount - d.paidAmount).toLocaleString() + ' ' + currency"></td><td class="p-3"><button x-show="d.status !== 'paid'" @click="openPaymentModal(d)" class="bg-brand-600 text-white px-2 py-1 rounded-lg text-[10px] font-bold" x-text="lang === 'en' ? 'Pay' : 'دفع'"></button></td></tr>
+                                </template>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
+            </div>
+
+            <!-- EXPENSES TAB -->
+            <div x-show="currentTab === 'expenses'" class="space-y-4 fade-in" x-cloak>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm"><span class="text-[11px] text-slate-400 font-bold" x-text="lang === 'en' ? 'Total Expenses' : 'إجمالي المصاريف'"></span><h3 class="text-xl font-black text-amber-600 mt-1" x-text="totalExpenses.toLocaleString() + ' ' + currency"></h3></div>
+                    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm"><span class="text-[11px] text-slate-400 font-bold" x-text="lang === 'en' ? 'Net Profit' : 'الربح الصافي'"></span><h3 class="text-xl font-black mt-1" :class="realNetProfit >= 0 ? 'text-brand-600' : 'text-rose-600'" x-text="realNetProfit.toLocaleString() + ' ' + currency"></h3></div>
+                </div>
+                <div class="flex items-center justify-between flex-wrap gap-3">
+                    <h3 class="font-bold" x-text="lang === 'en' ? 'Expenses Log' : 'سجل المصاريف'"></h3>
+                    <button @click="openModal('expense')" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-xl text-sm font-bold"><i class="fa-solid fa-plus mr-1"></i> <span x-text="lang === 'en' ? 'New Expense' : 'مصروف جديد'"></span></button>
+                </div>
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-xs">
+                            <thead class="bg-slate-50 dark:bg-slate-800 text-slate-500 font-bold"><tr><th class="p-3" x-text="lang === 'en' ? 'Type' : 'النوع'"></th><th class="p-3" x-text="lang === 'en' ? 'Amount' : 'المبلغ'"></th><th class="p-3" x-text="lang === 'en' ? 'Date' : 'التاريخ'"></th><th class="p-3" x-text="lang === 'en' ? 'Actions' : 'إجراءات'"></th></tr></thead>
+                            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                                <template x-for="e in expenses" :key="e.id">
+                                    <tr><td class="p-3" x-text="expenseTypeText(e.type)"></td><td class="p-3 font-black text-amber-700" x-text="e.amount.toLocaleString() + ' ' + currency"></td><td class="p-3 text-slate-500" x-text="e.date"></td><td class="p-3"><button @click="deleteExpense(e)" class="text-slate-400 hover:text-rose-600"><i class="fa-solid fa-trash"></i></button></td></tr>
+                                </template>
+                                <template x-if="expenses.length === 0">
+                                    <tr><td colspan="4" class="p-8 text-center text-slate-400" x-text="lang === 'en' ? 'No expenses yet' : 'لا توجد مصاريف بعد'"></td></tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ARCHIVE TAB -->
+            <div x-show="currentTab === 'archive'" class="space-y-4 fade-in" x-cloak>
+                <div class="bg-gradient-to-l from-brand-600 to-brand-700 text-white p-5 rounded-2xl shadow-lg">
+                    <div class="flex items-center justify-between flex-wrap gap-3">
+                        <div><h3 class="font-black text-lg" x-text="lang === 'en' ? 'Close Current Shift' : 'إغلاق الجولة الحالية'"></h3><p class="text-xs opacity-90 mt-1" x-text="lang === 'en' ? 'Archive sales & expenses, start fresh' : 'سيتم أرشفة كل البيانات والبدء بجولة جديدة'"></p></div>
+                        <button @click="openClotureConfirm()" class="bg-white text-brand-700 hover:bg-brand-50 px-4 py-2.5 rounded-xl text-sm font-black shadow-lg"><i class="fa-solid fa-lock mr-1"></i> <span x-text="lang === 'en' ? 'Close Now' : 'إغلاق الآن'"></span></button>
+                    </div>
+                </div>
+                <h3 class="font-bold" x-text="lang === 'en' ? 'Closed Shifts' : 'سجل الجولات المغلقة'"></h3>
                 <div class="grid grid-cols-1 gap-3">
                     <template x-for="shift in closedShifts" :key="shift.id">
-                        <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
-                            <div class="flex justify-between items-center">
-                                <h4 class="font-black text-sm" x-text="(lang === 'en' ? 'Shift #' : 'جولة #') + shift.number"></h4>
-                                <span class="text-xs text-slate-500" x-text="shift.startDate + ' → ' + shift.endDate"></span>
-                            </div>
-                            <div class="grid grid-cols-3 gap-2 mt-3 text-xs">
-                                <div><span class="text-slate-400 block text-[10px]" x-text="lang === 'en' ? 'Income' : 'مداخيل'"></span><span class="font-black text-emerald-600" x-text="shift.totalSales.toLocaleString() + ' ' + currency"></span></div>
+                        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+                            <div class="p-4 bg-slate-50 dark:bg-slate-800 flex items-center justify-between"><div class="flex items-center gap-3"><div class="w-10 h-10 bg-brand-100 text-brand-700 rounded-xl flex items-center justify-center font-black"><i class="fa-solid fa-check"></i></div><div><h4 class="font-black text-sm" x-text="(lang === 'en' ? 'Shift #' : 'جولة #') + shift.number"></h4><p class="text-[10px] text-slate-500" x-text="shift.startDate + ' → ' + shift.endDate"></p></div></div></div>
+                            <div class="grid grid-cols-3 gap-2 p-4 text-xs">
+                                <div><span class="text-slate-400 block text-[10px]" x-text="lang === 'en' ? 'Sales' : 'مبيعات'"></span><span class="font-black text-emerald-600" x-text="shift.totalSales.toLocaleString() + ' ' + currency"></span></div>
                                 <div><span class="text-slate-400 block text-[10px]" x-text="lang === 'en' ? 'Expenses' : 'مصاريف'"></span><span class="font-black text-amber-600" x-text="shift.totalExpenses.toLocaleString() + ' ' + currency"></span></div>
-                                <div><span class="text-slate-400 block text-[10px]" x-text="lang === 'en' ? 'Net Profit' : 'ربح صافي'"></span><span class="font-black text-brand-600" x-text="shift.realNetProfit.toLocaleString() + ' ' + currency"></span></div>
+                                <div><span class="text-slate-400 block text-[10px]" x-text="lang === 'en' ? 'Net' : 'صافي'"></span><span class="font-black text-brand-600" x-text="shift.realNetProfit.toLocaleString() + ' ' + currency"></span></div>
                             </div>
                         </div>
                     </template>
@@ -457,8 +325,8 @@
             </div>
         </main>
     </div>
-        <!-- ============ MODALS ============ -->
-
+        <!-- MODALS -->
+    
     <!-- Sale Modal -->
     <div x-show="modals.sale" x-cloak class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3 fade-in">
         <div @click.outside="closeModal('sale')" class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-lg w-full max-h-[95vh] overflow-y-auto">
@@ -467,36 +335,12 @@
                 <button @click="closeModal('sale')" class="text-slate-400 hover:text-rose-500"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             <form @submit.prevent="addSale()" class="p-4 space-y-3">
-                <div class="relative">
+                <div>
                     <label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Customer' : 'الزبون'"></label>
-                    <input x-model="saleForm.customerName" @input="updateCustomerSuggestions()" @focus="updateCustomerSuggestions()" required :placeholder="lang === 'en' ? 'Customer name...' : 'اسم الزبون...'" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm">
-                    <div x-show="customerSuggestions.length > 0 && saleForm.customerName" class="autocomplete-list">
-                        <template x-for="c in customerSuggestions.slice(0, 5)" :key="c.id">
-                            <div @click="saleForm.customerName = c.name; customerSuggestions = []" class="flex items-center justify-between">
-                                <span class="font-bold" x-text="c.name"></span>
-                                <span class="text-[10px] text-slate-400" x-text="c.phone || ''"></span>
-                            </div>
-                        </template>
-                    </div>
+                    <input x-model="saleForm.customerName" required :placeholder="lang === 'en' ? 'Customer name...' : 'اسم الزبون...'" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm">
                 </div>
-
                 <div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl space-y-2">
-                    <div class="flex items-center justify-between">
-                        <label class="text-xs font-bold text-slate-600 dark:text-slate-300" x-text="lang === 'en' ? '➕ Add Product to Cart' : '➕ إضافة منتج للسلة'"></label>
-                        <button type="button" @click="openBarcodeScanner('sale')" class="text-[10px] bg-slate-700 text-white px-2 py-1 rounded-lg font-bold"><i class="fa-solid fa-barcode mr-1"></i> <span x-text="lang === 'en' ? 'Barcode' : 'باركود'"></span></button>
-                    </div>
-                    <div class="relative">
-                        <i class="fa-solid fa-search absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                        <input x-model="cartProductSearch" @input="updateProductSuggestions()" @focus="updateProductSuggestions()" :placeholder="lang === 'en' ? 'Search product...' : 'ابحث عن منتج...'" class="w-full pr-9 pl-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-900 text-sm">
-                        <div x-show="productSuggestions.length > 0 && cartProductSearch" class="autocomplete-list">
-                            <template x-for="p in productSuggestions.slice(0, 6)" :key="p.id">
-                                <div @click="selectProductFromSearch(p)" class="flex items-center justify-between">
-                                    <div class="flex items-center gap-2"><template x-if="p.image"><img :src="p.image" class="w-6 h-6 rounded object-cover"></template><span class="font-bold" x-text="p.name"></span></div>
-                                    <span class="text-[10px] text-brand-600 font-bold" x-text="p.sellPrice + ' ' + currency"></span>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
+                    <label class="text-xs font-bold text-slate-600 dark:text-slate-300 block" x-text="lang === 'en' ? '➕ Add Product' : '➕ إضافة منتج'"></label>
                     <select x-model="cartItemForm.inventoryId" @change="onCartProductSelect()" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-900 text-sm">
                         <option value="" x-text="lang === 'en' ? 'Select Product' : 'اختر منتج'"></option>
                         <template x-for="p in inventory" :key="p.id">
@@ -504,97 +348,31 @@
                         </template>
                     </select>
                     <div class="grid grid-cols-2 gap-2">
-                        <div><label class="text-[10px] text-slate-500 block" x-text="lang === 'en' ? 'Quantity' : 'الكمية'"></label><input x-model.number="cartItemForm.quantity" type="number" min="1" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-900 text-sm"></div>
+                        <div><label class="text-[10px] text-slate-500 block" x-text="lang === 'en' ? 'Qty' : 'الكمية'"></label><input x-model.number="cartItemForm.quantity" type="number" min="1" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-900 text-sm"></div>
                         <div><label class="text-[10px] text-slate-500 block" x-text="lang === 'en' ? 'Price' : 'السعر'"></label><input x-model.number="cartItemForm.itemPrice" type="number" step="0.01" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-900 text-sm"></div>
                     </div>
                     <button type="button" @click="addToCart()" class="w-full bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 text-white py-2 rounded-xl text-xs font-bold"><i class="fa-solid fa-cart-plus mr-1"></i> <span x-text="lang === 'en' ? 'Add to Cart' : 'إضافة للسلة'"></span></button>
                 </div>
-
                 <div x-show="cart.length > 0" class="bg-brand-50 dark:bg-brand-900/20 border border-brand-200 dark:border-brand-800 rounded-xl p-2 max-h-56 overflow-y-auto">
-                    <div class="flex items-center justify-between mb-2 px-1">
-                        <span class="text-xs font-bold text-brand-700 dark:text-brand-300">🛒 <span x-text="lang === 'en' ? 'Cart' : 'السلة'"></span> (<span x-text="cart.length"></span> <span x-text="lang === 'en' ? 'items' : 'منتج'"></span>)</span>
-                        <button type="button" @click="cart = []" class="text-[10px] text-rose-600 hover:underline font-bold" x-text="lang === 'en' ? 'Clear' : 'تفريغ'"></button>
-                    </div>
                     <template x-for="(item, idx) in cart" :key="idx">
                         <div class="bg-white dark:bg-slate-900 p-2 rounded-lg mb-1.5 flex items-center gap-2 text-xs">
-                            <div class="flex-1 min-w-0">
-                                <p class="font-bold truncate" x-text="item.itemName"></p>
-                                <div class="flex items-center gap-1 mt-1">
-                                    <button type="button" @click="updateCartQuantity(idx, -1)" class="w-5 h-5 bg-slate-200 dark:bg-slate-700 rounded text-[10px] font-bold">−</button>
-                                    <span class="font-black w-6 text-center" x-text="item.quantity"></span>
-                                    <button type="button" @click="updateCartQuantity(idx, 1)" class="w-5 h-5 bg-slate-200 dark:bg-slate-700 rounded text-[10px] font-bold">+</button>
-                                    <input type="number" step="0.01" :value="item.itemPrice" @input="updateCartPrice(idx, $event.target.value)" class="w-16 px-1 py-0.5 border border-slate-200 dark:border-slate-700 dark:bg-slate-800 rounded text-[10px]">
-                                    <span class="text-[10px] text-slate-500" x-text="currency"></span>
-                                </div>
-                            </div>
-                            <div class="text-left">
-                                <p class="font-black text-brand-700 text-[11px]" x-text="(item.itemPrice * item.quantity).toLocaleString() + ' ' + currency"></p>
-                                <button type="button" @click="removeFromCart(idx)" class="text-rose-500 hover:text-rose-700 text-[10px] mt-0.5"><i class="fa-solid fa-times"></i></button>
-                            </div>
+                            <div class="flex-1 min-w-0"><p class="font-bold truncate" x-text="item.itemName"></p><p class="text-[10px] text-slate-500" x-text="'x ' + item.quantity + ' @ ' + item.itemPrice + ' ' + currency"></p></div>
+                            <button type="button" @click="removeFromCart(idx)" class="text-rose-500 text-xs"><i class="fa-solid fa-times"></i></button>
                         </div>
                     </template>
                 </div>
-
                 <div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl space-y-2">
-                    <div>
-                        <label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Payment Method' : 'طريقة الدفع'"></label>
+                    <div><label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Payment Method' : 'طريقة الدفع'"></label>
                         <select x-model="saleForm.paymentMethod" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm">
                             <option value="cash" x-text="lang === 'en' ? 'Cash' : 'نقدي'"></option>
-                            <option value="credit" x-text="lang === 'en' ? 'Credit (Debt)' : 'دين (دفع لاحق)'"></option>
+                            <option value="credit" x-text="lang === 'en' ? 'Credit (Debt)' : 'دين'"></option>
                             <option value="partial" x-text="lang === 'en' ? 'Partial Payment' : 'دفع جزئي'"></option>
                         </select>
                     </div>
-                    <div x-show="saleForm.paymentMethod === 'partial'">
-                        <label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Paid Amount' : 'المبلغ المدفوع'"></label>
-                        <input x-model.number="saleForm.paidAmount" type="number" step="0.01" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm">
-                    </div>
+                    <div x-show="saleForm.paymentMethod === 'partial'"><label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Paid Amount' : 'المبلغ المدفوع'"></label><input x-model.number="saleForm.paidAmount" type="number" step="0.01" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm"></div>
                 </div>
-
-                <div class="bg-brand-600 text-white p-3 rounded-xl flex justify-between items-center">
-                    <span class="text-sm font-bold" x-text="lang === 'en' ? 'Total' : 'الإجمالي'"></span>
-                    <span class="text-xl font-black" x-text="cartTotal.toLocaleString() + ' ' + currency"></span>
-                </div>
-
+                <div class="bg-brand-600 text-white p-3 rounded-xl flex justify-between items-center"><span class="text-sm font-bold" x-text="lang === 'en' ? 'Total' : 'الإجمالي'"></span><span class="text-xl font-black" x-text="cartTotal.toLocaleString() + ' ' + currency"></span></div>
                 <button type="submit" :disabled="cart.length === 0" class="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white py-3 rounded-xl font-bold text-sm"><i class="fa-solid fa-check mr-1"></i> <span x-text="lang === 'en' ? 'Save Invoice' : 'حفظ الفاتورة'"></span></button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Edit Sale Modal -->
-    <div x-show="modals.editSale" x-cloak class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3 fade-in">
-        <div @click.outside="closeModal('editSale')" class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-lg w-full max-h-[95vh] overflow-y-auto">
-            <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center sticky top-0 bg-white dark:bg-slate-900 z-10">
-                <h3 class="font-black">✏️ <span x-text="lang === 'en' ? 'Edit Invoice' : 'تعديل الفاتورة'"></span> <span class="text-xs text-slate-400" x-text="'#' + (editSaleForm.id ? String(editSaleForm.id).slice(-4) : '')"></span></h3>
-                <button @click="closeModal('editSale')" class="text-slate-400 hover:text-rose-500"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <form @submit.prevent="saveEditSale()" class="p-4 space-y-3">
-                <div>
-                    <label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Customer' : 'الزبون'"></label>
-                    <input x-model="editSaleForm.customerName" required class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm">
-                </div>
-                <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-500 block" x-text="lang === 'en' ? 'Invoice Items' : 'منتجات الفاتورة'"></label>
-                    <template x-for="(item, idx) in editSaleForm.items" :key="idx">
-                        <div class="bg-slate-50 dark:bg-slate-800 p-2 rounded-xl space-y-1.5">
-                            <div class="flex items-center justify-between">
-                                <span class="font-bold text-xs" x-text="item.itemName"></span>
-                                <button type="button" @click="editSaleForm.items.splice(idx, 1)" class="text-rose-500 text-xs"><i class="fa-solid fa-trash"></i></button>
-                            </div>
-                            <div class="grid grid-cols-2 gap-2">
-                                <div><label class="text-[10px] text-slate-500" x-text="lang === 'en' ? 'Qty' : 'الكمية'"></label><input x-model.number="item.quantity" type="number" min="1" class="w-full px-2 py-1 rounded-lg border text-xs"></div>
-                                <div><label class="text-[10px] text-slate-500" x-text="lang === 'en' ? 'Price' : 'السعر'"></label><input x-model.number="item.itemPrice" type="number" step="0.01" class="w-full px-2 py-1 rounded-lg border text-xs"></div>
-                            </div>
-                        </div>
-                    </template>
-                </div>
-                <div class="bg-brand-600 text-white p-3 rounded-xl flex justify-between items-center">
-                    <span class="text-sm font-bold" x-text="lang === 'en' ? 'New Total' : 'الإجمالي الجديد'"></span>
-                    <span class="text-xl font-black" x-text="editCartTotal.toLocaleString() + ' ' + currency"></span>
-                </div>
-                <div class="flex gap-2">
-                    <button type="button" @click="closeModal('editSale')" class="flex-1 bg-slate-100 dark:bg-slate-800 py-2.5 rounded-xl font-bold text-sm" x-text="lang === 'en' ? 'Cancel' : 'إلغاء'"></button>
-                    <button type="submit" class="flex-1 bg-brand-600 text-white py-2.5 rounded-xl font-bold text-sm" x-text="lang === 'en' ? 'Save' : 'حفظ'"></button>
-                </div>
             </form>
         </div>
     </div>
@@ -602,40 +380,27 @@
     <!-- Inventory Add Modal -->
     <div x-show="modals.inventory" x-cloak class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3 fade-in">
         <div @click.outside="closeModal('inventory')" class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full max-h-[95vh] overflow-y-auto">
-            <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                <h3 class="font-black">📦 <span x-text="lang === 'en' ? 'Add Product' : 'إضافة منتج جديد'"></span></h3>
-                <button @click="closeModal('inventory')" class="text-slate-400 hover:text-rose-500"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
+            <div class="p-4 border-b flex justify-between items-center"><h3 class="font-black">📦 <span x-text="lang === 'en' ? 'Add Product' : 'إضافة منتج'"></span></h3><button @click="closeModal('inventory')" class="text-slate-400 hover:text-rose-500"><i class="fa-solid fa-xmark"></i></button></div>
             <form @submit.prevent="addInventory()" class="p-4 space-y-3">
-                <div>
-                    <label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Product Image' : 'صورة المنتج'"></label>
-                    <input type="file" accept="image/*" @change="handleImageUpload($event, 'inventory')" class="hidden" id="invImageInput">
-                    <label for="invImageInput" class="cursor-pointer bg-brand-600 text-white px-3 py-2 rounded-lg text-xs font-bold inline-block"><i class="fa-solid fa-upload mr-1"></i> <span x-text="lang === 'en' ? 'Upload Image' : 'رفع صورة'"></span></label>
-                </div>
+                <div><label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Product Image' : 'صورة المنتج'"></label><input type="file" accept="image/*" @change="handleImageUpload($event, 'inventory')" class="block w-full text-xs"></div>
                 <div><label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Product Name' : 'اسم المنتج'"></label><input x-model="invForm.name" required class="w-full px-3 py-2 rounded-xl border text-sm"></div>
                 <div><label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Barcode' : 'الباركود'"></label><input x-model="invForm.barcode" class="w-full px-3 py-2 rounded-xl border text-sm font-mono"></div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div><label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Buy Price' : 'سعر الشراء'"></label><input x-model.number="invForm.buyPrice" type="number" required class="w-full px-3 py-2 rounded-xl border text-sm"></div>
-                    <div><label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Sell Price' : 'سعر البيع'"></label><input x-model.number="invForm.sellPrice" type="number" required class="w-full px-3 py-2 rounded-xl border text-sm"></div>
-                </div>
-                <div><label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Initial Stock' : 'الكمية الابتدائية'"></label><input x-model.number="invForm.stock" type="number" min="0" required class="w-full px-3 py-2 rounded-xl border text-sm"></div>
-                <button type="submit" class="w-full bg-brand-600 text-white py-2.5 rounded-xl font-bold" x-text="lang === 'en' ? 'Save Product' : 'حفظ المنتج'"></button>
+                <div class="grid grid-cols-2 gap-3"><div><label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Buy Price' : 'سعر الشراء'"></label><input x-model.number="invForm.buyPrice" type="number" required class="w-full px-3 py-2 rounded-xl border text-sm"></div><div><label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Sell Price' : 'سعر البيع'"></label><input x-model.number="invForm.sellPrice" type="number" required class="w-full px-3 py-2 rounded-xl border text-sm"></div></div>
+                <div><label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Initial Stock' : 'الكمية'"></label><input x-model.number="invForm.stock" type="number" required class="w-full px-3 py-2 rounded-xl border text-sm"></div>
+                <button type="submit" class="w-full bg-brand-600 text-white py-2.5 rounded-xl font-bold" x-text="lang === 'en' ? 'Save Product' : 'حفظ'"></button>
             </form>
         </div>
     </div>
 
-    <!-- Customer Modal -->
+    <!-- Customer Add Modal -->
     <div x-show="modals.customer" x-cloak class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3 fade-in">
         <div @click.outside="closeModal('customer')" class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full">
-            <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                <h3 class="font-black">👤 <span x-text="lang === 'en' ? 'New Customer' : 'زبون جديد'"></span></h3>
-                <button @click="closeModal('customer')" class="text-slate-400 hover:text-rose-500"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
+            <div class="p-4 border-b flex justify-between items-center"><h3 class="font-black">👤 <span x-text="lang === 'en' ? 'New Customer' : 'زبون جديد'"></span></h3><button @click="closeModal('customer')" class="text-slate-400 hover:text-rose-500"><i class="fa-solid fa-xmark"></i></button></div>
             <form @submit.prevent="addCustomer()" class="p-4 space-y-3">
                 <div><label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Name' : 'الاسم'"></label><input x-model="custForm.name" required class="w-full px-3 py-2 rounded-xl border text-sm"></div>
-                <div><label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Phone' : 'الهاتف'"></label><input x-model="custForm.phone" type="tel" class="w-full px-3 py-2 rounded-xl border text-sm"></div>
+                <div><label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Phone' : 'الهاتف'"></label><input x-model="custForm.phone" class="w-full px-3 py-2 rounded-xl border text-sm"></div>
                 <div><label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Address' : 'العنوان'"></label><input x-model="custForm.address" class="w-full px-3 py-2 rounded-xl border text-sm"></div>
-                <button type="submit" class="w-full bg-brand-600 text-white py-2.5 rounded-xl font-bold" x-text="lang === 'en' ? 'Save Customer' : 'حفظ الزبون'"></button>
+                <button type="submit" class="w-full bg-brand-600 text-white py-2.5 rounded-xl font-bold" x-text="lang === 'en' ? 'Save Customer' : 'حفظ'"></button>
             </form>
         </div>
     </div>
@@ -643,49 +408,27 @@
     <!-- Payment Modal -->
     <div x-show="modals.payment" x-cloak class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3 fade-in">
         <div @click.outside="closeModal('payment')" class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full">
-            <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                <h3 class="font-black">💰 <span x-text="lang === 'en' ? 'Debt Payment' : 'دفعة دين'"></span></h3>
-                <button @click="closeModal('payment')" class="text-slate-400 hover:text-rose-500"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
+            <div class="p-4 border-b flex justify-between items-center"><h3 class="font-black">💰 <span x-text="lang === 'en' ? 'Debt Payment' : 'دفعة دين'"></span></h3><button @click="closeModal('payment')" class="text-slate-400 hover:text-rose-500"><i class="fa-solid fa-xmark"></i></button></div>
             <form @submit.prevent="addPayment()" class="p-4 space-y-3" x-show="selectedDebt">
                 <div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl text-sm">
                     <div class="flex justify-between"><span x-text="lang === 'en' ? 'Customer' : 'الزبون'"></span><span class="font-bold" x-text="selectedDebt?.customerName"></span></div>
                     <div class="flex justify-between mt-1"><span x-text="lang === 'en' ? 'Remaining' : 'المتبقي'"></span><span class="font-bold text-rose-600" x-text="((selectedDebt?.totalAmount || 0) - (selectedDebt?.paidAmount || 0)).toLocaleString() + ' ' + currency"></span></div>
                 </div>
-                <div><label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Amount Paid Now' : 'المبلغ المدفوع الآن'"></label><input x-model.number="paymentAmount" type="number" step="0.01" required class="w-full px-3 py-2 rounded-xl border text-sm"></div>
+                <div><label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Paid Amount Now' : 'المبلغ المدفوع الآن'"></label><input x-model.number="paymentAmount" type="number" step="0.01" required class="w-full px-3 py-2 rounded-xl border text-sm"></div>
                 <button type="submit" class="w-full bg-brand-600 text-white py-2.5 rounded-xl font-bold" x-text="lang === 'en' ? 'Record Payment' : 'تسجيل الدفع'"></button>
             </form>
         </div>
     </div>
 
-    <!-- Expense Modal -->
+    <!-- Expense Add Modal -->
     <div x-show="modals.expense" x-cloak class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3 fade-in">
         <div @click.outside="closeModal('expense')" class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full">
-            <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                <h3 class="font-black">💸 <span x-text="lang === 'en' ? 'New Expense' : 'مصروف جديد'"></span></h3>
-                <button @click="closeModal('expense')" class="text-slate-400 hover:text-rose-500"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
+            <div class="p-4 border-b flex justify-between items-center"><h3 class="font-black">💸 <span x-text="lang === 'en' ? 'New Expense' : 'مصروف جديد'"></span></h3><button @click="closeModal('expense')" class="text-slate-400 hover:text-rose-500"><i class="fa-solid fa-xmark"></i></button></div>
             <form @submit.prevent="addExpense()" class="p-4 space-y-3">
-                <div><label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Type' : 'النوع'"></label><select x-model="expenseForm.type" class="w-full px-3 py-2 rounded-xl border text-sm"><option value="fuel">⛽ وقود</option><option value="maintenance">🔧 صيانة</option><option value="food">🍽️ طعام</option><option value="toll">🛣️ رسوم طريق</option><option value="other">📦 أخرى</option></select></div>
+                <div><label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Type' : 'النوع'"></label><select x-model="expenseForm.type" class="w-full px-3 py-2 rounded-xl border text-sm"><option value="fuel">⛽ وقود</option><option value="maintenance">🔧 صيانة</option><option value="food">🍽️ طعام</option><option value="other">📦 أخرى</option></select></div>
                 <div><label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Amount' : 'المبلغ'"></label><input x-model.number="expenseForm.amount" type="number" required class="w-full px-3 py-2 rounded-xl border text-sm"></div>
                 <div><label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Description' : 'الوصف'"></label><input x-model="expenseForm.description" class="w-full px-3 py-2 rounded-xl border text-sm"></div>
-                <button type="submit" class="w-full bg-amber-600 text-white py-2.5 rounded-xl font-bold" x-text="lang === 'en' ? 'Save Expense' : 'حفظ المصروف'"></button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Settings Modal -->
-    <div x-show="modals.settings" x-cloak class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3 fade-in">
-        <div @click.outside="closeModal('settings')" class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full">
-            <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                <h3 class="font-black">⚙️ <span x-text="lang === 'en' ? 'Shop Settings' : 'إعدادات المحل'"></span></h3>
-                <button @click="closeModal('settings')" class="text-slate-400 hover:text-rose-500"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <form @submit.prevent="saveSettings()" class="p-4 space-y-3">
-                <div><label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Shop Name' : 'اسم المحل'"></label><input x-model="shopInfo.name" class="w-full px-3 py-2 rounded-xl border text-sm"></div>
-                <div><label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Phone' : 'الهاتف'"></label><input x-model="shopInfo.phone" class="w-full px-3 py-2 rounded-xl border text-sm"></div>
-                <div><label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Address' : 'العنوان'"></label><input x-model="shopInfo.address" class="w-full px-3 py-2 rounded-xl border text-sm"></div>
-                <button type="submit" class="w-full bg-brand-600 text-white py-2.5 rounded-xl font-bold" x-text="lang === 'en' ? 'Save Settings' : 'حفظ الإعدادات'"></button>
+                <button type="submit" class="w-full bg-amber-600 text-white py-2.5 rounded-xl font-bold" x-text="lang === 'en' ? 'Save Expense' : 'حفظ'"></button>
             </form>
         </div>
     </div>
@@ -695,43 +438,15 @@
         <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-sm w-full p-5 text-center">
             <i class="fa-solid fa-triangle-exclamation text-4xl text-amber-500 mb-3 block"></i>
             <h3 class="font-black mb-2" x-text="confirmMsg"></h3>
-            <div class="flex gap-2 mt-4">
-                <button @click="closeModal('confirm')" class="flex-1 bg-slate-100 dark:bg-slate-800 py-2 rounded-xl font-bold text-sm" x-text="lang === 'en' ? 'Cancel' : 'إلغاء'"></button>
-                <button @click="confirmAction()" class="flex-1 bg-rose-600 text-white py-2 rounded-xl font-bold text-sm" x-text="lang === 'en' ? 'Confirm' : 'تأكيد'"></button>
-            </div>
+            <div class="flex gap-2 mt-4"><button @click="closeModal('confirm')" class="flex-1 bg-slate-100 dark:bg-slate-800 py-2 rounded-xl font-bold text-sm" x-text="lang === 'en' ? 'Cancel' : 'إلغاء'"></button><button @click="confirmAction()" class="flex-1 bg-rose-600 text-white py-2 rounded-xl font-bold text-sm" x-text="lang === 'en' ? 'Confirm' : 'تأكيد'"></button></div>
         </div>
     </div>
 
-    <!-- Barcode Scanner Modal -->
-    <div x-show="modals.barcode" x-cloak class="fixed inset-0 bg-black/80 z-[70] flex items-center justify-center p-3 fade-in">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full">
-            <div class="p-4 border-b flex justify-between items-center"><h3 class="font-black">📷 <span x-text="lang === 'en' ? 'Scan Barcode' : 'مسح الباركود'"></span></h3><button @click="closeBarcodeScanner()" class="text-slate-400 hover:text-rose-500"><i class="fa-solid fa-xmark text-lg"></i></button></div>
-            <div class="p-4 space-y-3">
-                <div id="barcodeReader" class="rounded-xl overflow-hidden bg-black" style="min-height: 200px;"></div>
-                <div x-show="cameraError" class="bg-rose-50 text-rose-800 p-3 rounded-xl text-xs" x-text="cameraError"></div>
-                <div><label class="text-xs font-bold text-slate-500 block mb-1" x-text="lang === 'en' ? 'Or enter manually' : 'أو أدخل يدوياً'"></label><input x-model="barcodeManualInput" @keyup.enter="applyBarcode(barcodeManualInput)" class="w-full px-3 py-2 rounded-xl border text-sm font-mono"></div>
-                <button @click="applyBarcode(barcodeManualInput)" class="w-full bg-brand-600 text-white py-2.5 rounded-xl font-bold" x-text="lang === 'en' ? 'Confirm' : 'تأكيد'"></button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Receipt Print -->
     <div id="receiptPrint" class="hidden"></div>
-
-    <!-- Toasts -->
-    <div class="fixed top-4 left-4 z-[70] space-y-2 pointer-events-none" style="max-width: 320px;">
-        <template x-for="t in toasts" :key="t.id">
-            <div class="toast-enter pointer-events-auto bg-white dark:bg-slate-800 rounded-xl shadow-2xl border-l-4 p-3 flex items-start gap-2" :class="{'border-emerald-500': t.type==='success','border-rose-500': t.type==='error','border-amber-500': t.type==='warning','border-blue-500': t.type==='info'}">
-                <i class="fa-solid text-sm mt-0.5" :class="{'fa-check-circle text-emerald-500': t.type==='success','fa-times-circle text-rose-500': t.type==='error','fa-exclamation-circle text-amber-500': t.type==='warning','fa-info-circle text-blue-500': t.type==='info'}"></i>
-                <p class="text-xs font-bold flex-1" x-text="t.message"></p>
-            </div>
-        </template>
-    </div>
-        <!-- ============ APP LOGIC ============ -->
-    <script>
+        <script>
         function merchantApp() {
             return {
-                // ============ STATE ============
+                // ============ المتغيرات الأساسية ============
                 currentTab: 'dashboard',
                 lang: localStorage.getItem('lang') || 'ar',
                 dir: localStorage.getItem('lang') === 'en' ? 'ltr' : 'rtl',
@@ -739,7 +454,6 @@
                 currency: localStorage.getItem('currency') || 'د.ج',
                 online: navigator.onLine,
                 salesSearch: '',
-                salesFilter: '',
                 customersSearch: '',
                 inventorySearch: '',
                 toasts: [],
@@ -755,12 +469,8 @@
                 shiftNumber: 1,
                 shiftStartDate: new Date().toISOString().split('T')[0],
                 expandedShift: null,
-                showLastShiftDetails: false,
-                modals: { 
-                    sale: false, inventory: false, customer: false, payment: false, 
-                    history: false, confirm: false, editSale: false, expense: false,
-                    priceEdit: false, editInventory: false, barcode: false, settings: false, viewImage: false
-                },
+                
+                modals: { sale: false, inventory: false, customer: false, payment: false, history: false, confirm: false, expense: false, priceEdit: false, editInventory: false, barcode: false, settings: false, viewImage: false },
                 saleForm: { customerName: '', inventoryId: '', quantity: 1, itemPrice: 0, paymentMethod: 'cash', paidAmount: 0 },
                 editSaleForm: { id: null, customerName: '', items: [] },
                 invForm: { name: '', category: '', buyPrice: 0, sellPrice: 0, stock: 0, image: null, barcode: '' },
@@ -789,17 +499,17 @@
                 charts: { sales: null, products: null },
 
                 navItems: [
-                    { id: 'dashboard', label: 'ملخص المبيعات', short: 'الرئيسية', icon: 'fa-chart-pie' },
-                    { id: 'sales', label: 'المبيعات والفواتير', short: 'المبيعات', icon: 'fa-cart-shopping' },
-                    { id: 'inventory', label: 'مخزون السيارة', short: 'المخزون', icon: 'fa-boxes-stacked' },
-                    { id: 'customers', label: 'الزبائن والملاحظات', short: 'الزبائن', icon: 'fa-address-book' },
-                    { id: 'debts', label: 'دفتر الديون', short: 'الديون', icon: 'fa-book-bookmark' },
-                    { id: 'expenses', label: 'مصاريف الجولة', short: 'مصاريف', icon: 'fa-gas-pump' },
-                    { id: 'archive', label: 'أرشيف الجولات', short: 'أرشيف', icon: 'fa-box-archive' },
+                    { id: 'dashboard', icon: 'fa-chart-pie' },
+                    { id: 'sales', icon: 'fa-cart-shopping' },
+                    { id: 'inventory', icon: 'fa-boxes-stacked' },
+                    { id: 'customers', icon: 'fa-address-book' },
+                    { id: 'debts', icon: 'fa-book-bookmark' },
+                    { id: 'expenses', icon: 'fa-gas-pump' },
+                    { id: 'archive', icon: 'fa-box-archive' },
                 ],
 
                 tabTitles: {
-                    ar: { dashboard: 'ملخص المبيعات', sales: 'المبيعات والفواتير', inventory: 'مخزون السيارة/الحافلة', customers: 'الزبائن والملاحظات', debts: 'دفتر الديون', expenses: 'مصاريف الجولة الميدانية', archive: 'أرشيف الجولات المغلقة' },
+                    ar: { dashboard: 'ملخص المبيعات', sales: 'المبيعات والفواتير', inventory: 'مخزون السيارة', customers: 'الزبائن والملاحظات', debts: 'دفتر الديون', expenses: 'مصاريف الجولة', archive: 'أرشيف الجولات' },
                     en: { dashboard: 'Dashboard', sales: 'Sales & Invoices', inventory: 'Vehicle Inventory', customers: 'Customers & Notes', debts: 'Debts Book', expenses: 'Trip Expenses', archive: 'Archive' }
                 },
                 
@@ -811,6 +521,7 @@
                 $t(key) { return this.translations[this.lang][key] || key; },
                 $t_title(key) { return this.tabTitles[this.lang][key] || key; },
 
+                // ============ التهيئة ============
                 initApp() {
                     this.loadFromStorage();
                     if (this.sales.length === 0 && this.closedShifts.length === 0) this.seedDemoData();
@@ -819,16 +530,19 @@
                     document.documentElement.setAttribute('lang', this.lang);
                     if (this.lang === 'en') document.body.style.fontFamily = 'Arial, sans-serif';
                     
-                    window.addEventListener('online', () => { this.online = true; this.toast(this.lang === 'en' ? 'Back online' : 'عاد الاتصال', 'success'); });
-                    window.addEventListener('offline', () => { this.online = false; this.toast(this.lang === 'en' ? 'Offline mode' : 'انقطع الاتصال', 'warning'); });
                     this.$watch('currentTab', () => this.$nextTick(() => this.renderCharts()));
-                    this.$watch('sales', () => this.saveToStorage()); this.$watch('inventory', () => this.saveToStorage());
-                    this.$watch('customers', () => this.saveToStorage()); this.$watch('debts', () => this.saveToStorage());
-                    this.$watch('debtPayments', () => this.saveToStorage()); this.$watch('expenses', () => this.saveToStorage());
-                    this.$watch('closedShifts', () => this.saveToStorage()); this.$watch('shopInfo', () => this.saveToStorage());
+                    this.$watch('sales', () => this.saveToStorage());
+                    this.$watch('inventory', () => this.saveToStorage());
+                    this.$watch('customers', () => this.saveToStorage());
+                    this.$watch('debts', () => this.saveToStorage());
+                    this.$watch('debtPayments', () => this.saveToStorage());
+                    this.$watch('expenses', () => this.saveToStorage());
+                    this.$watch('closedShifts', () => this.saveToStorage());
+                    this.$watch('shopInfo', () => this.saveToStorage());
                     this.checkStockAlerts();
                 },
 
+                // ============ حفظ واسترجاع البيانات ============
                 saveToStorage() {
                     try {
                         localStorage.setItem('merchant_data', JSON.stringify({
@@ -838,6 +552,7 @@
                         }));
                     } catch(e) { console.warn('Storage error', e); }
                 },
+
                 loadFromStorage() {
                     try {
                         const d = JSON.parse(localStorage.getItem('merchant_data') || '{}');
@@ -848,12 +563,13 @@
                         this.shopInfo = d.shopInfo || { name: 'التاجر المتنقل', phone: '', address: '', logo: null };
                     } catch(e) { console.warn('Load error', e); }
                 },
+
                 exportData() {
                     const blob = new Blob([JSON.stringify({ sales: this.sales, inventory: this.inventory, customers: this.customers, debts: this.debts, debtPayments: this.debtPayments, expenses: this.expenses, closedShifts: this.closedShifts, shiftNumber: this.shiftNumber, shiftStartDate: this.shiftStartDate, shopInfo: this.shopInfo, exportedAt: new Date().toISOString() }, null, 2)], { type: 'application/json' });
                     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `merchant-backup-${new Date().toISOString().split('T')[0]}.json`; a.click();
-                    this.toast('تم تصدير النسخة الاحتياطية', 'success');
+                    this.toast(this.lang === 'en' ? 'Backup exported' : 'تم تصدير النسخة الاحتياطية', 'success');
                 },
-
+                                // ============ البيانات التجريبية ============
                 seedDemoData() {
                     this.inventory = [
                         { id: 1, name: 'زيت 5L', category: 'بقالة', buyPrice: 800, sellPrice: 1100, stock: 25, maxStock: 50, image: null, barcode: '6001234500011' },
@@ -861,53 +577,98 @@
                         { id: 3, name: 'عصير برتقال', category: 'مشروبات', buyPrice: 80, sellPrice: 120, stock: 48, maxStock: 60, image: null, barcode: '6001234500035' },
                         { id: 4, name: 'شاي أخضر', category: 'مشروبات', buyPrice: 200, sellPrice: 280, stock: 12, maxStock: 40, image: null, barcode: '6001234500042' },
                     ];
-                    this.customers = [{ id: 1, name: 'محمد بن علي', phone: '0550112233', address: 'حي النصر', notes: 'زبون دائم', lat: 36.365, lng: 6.614 }, { id: 2, name: 'أحمد سعيد', phone: '0660445566', address: 'سوق المدينة', notes: '', lat: null, lng: null }];
+                    this.customers = [
+                        { id: 1, name: 'محمد بن علي', phone: '0550112233', address: 'حي النصر', notes: 'زبون دائم', lat: 36.365, lng: 6.614 },
+                        { id: 2, name: 'أحمد سعيد', phone: '0660445566', address: 'سوق المدينة', notes: '', lat: null, lng: null },
+                    ];
                     const today = new Date().toISOString().split('T')[0];
                     this.sales = [
-                        { id: 1, customerName: 'محمد بن علي', items: [{ inventoryId: 1, itemName: 'زيت 5L', itemPrice: 1100, quantity: 2 }, { inventoryId: 4, itemName: 'شاي أخضر', itemPrice: 280, quantity: 1 }], status: 'paid', paymentMethod: 'cash', location: 'حي النصر', deliveryMethod: 'تسليم مباشر', date: today },
-                        { id: 2, customerName: 'أحمد سعيد', items: [{ inventoryId: 3, itemName: 'عصير برتقال', itemPrice: 120, quantity: 5 }], status: 'paid', paymentMethod: 'cash', location: 'سوق المدينة', deliveryMethod: 'تسليم مباشر', date: today }
+                        { id: 1, customerName: 'محمد بن علي', items: [{ inventoryId: 1, itemName: 'زيت 5L', itemPrice: 1100, quantity: 2 }, { inventoryId: 4, itemName: 'شاي أخضر', itemPrice: 280, quantity: 1 }], status: 'paid', paymentMethod: 'cash', date: today },
+                        { id: 2, customerName: 'أحمد سعيد', items: [{ inventoryId: 3, itemName: 'عصير برتقال', itemPrice: 120, quantity: 5 }], status: 'paid', paymentMethod: 'cash', date: today }
                     ];
                     this.debts = [{ id: 1, customerName: 'أحمد سعيد', totalAmount: 2000, paidAmount: 500, status: 'partial', date: today, saleId: 2 }];
-                    this.expenses = []; this.closedShifts = []; this.shiftNumber = 1; this.shiftStartDate = today;
+                    this.expenses = [];
+                    this.closedShifts = [];
+                    this.shiftNumber = 1;
+                    this.shiftStartDate = today;
                     this.saveToStorage();
                 },
 
-                getBadgeCount(tab) { if (tab === 'sales') return this.sales.filter(s => s.status === 'pending').length; if (tab === 'debts') return this.debts.filter(d => d.status !== 'paid').length; if (tab === 'expenses') return this.expenses.length; return 0; },
+                // ============ الدوال المساعدة (Helpers) ============
+                getBadgeCount(tab) {
+                    if (tab === 'sales') return this.sales.filter(s => s.status === 'pending').length;
+                    if (tab === 'debts') return this.debts.filter(d => d.status !== 'paid').length;
+                    if (tab === 'expenses') return this.expenses.length;
+                    return 0;
+                },
                 statusBadgeClass(st) { return { paid: 'bg-emerald-100 text-emerald-700', pending: 'bg-amber-100 text-amber-700', debt: 'bg-rose-100 text-rose-700' }[st] || 'bg-slate-100 text-slate-600'; },
                 statusText(st) { return { paid: 'مدفوع', pending: 'معلق', debt: 'دين' }[st] || st; },
                 paymentMethodText(m) { return { cash: 'نقدي', credit: 'دين', partial: 'دفع جزئي' }[m] || 'نقدي'; },
                 expenseTypeText(t) { return { fuel: '⛽ وقود', maintenance: '🔧 صيانة', food: '🍽️ طعام', toll: '🛣️ رسوم طريق', parking: '🅿️ موقف', phone: '📱 اتصالات', other: '📦 أخرى' }[t] || t; },
                 
-                toast(message, type = 'success') { const id = ++this.toastId; this.toasts.push({ id, message, type }); setTimeout(() => { this.toasts = this.toasts.filter(t => t.id !== id); }, 3000); },
-                pushNotification(type, title, message) { this.notifications.unshift({ type, title, message, read: false, time: new Date().toLocaleTimeString('ar-DZ', { hour: '2-digit', minute: '2-digit' }) }); },
+                toast(message, type = 'success') {
+                    const id = ++this.toastId;
+                    this.toasts.push({ id, message, type });
+                    setTimeout(() => { this.toasts = this.toasts.filter(t => t.id !== id); }, 3000);
+                },
+                pushNotification(type, title, message) {
+                    this.notifications.unshift({ type, title, message, read: false, time: new Date().toLocaleTimeString('ar-DZ', { hour: '2-digit', minute: '2-digit' }) });
+                },
                 markAllRead() { this.notifications = this.notifications.map(n => ({...n, read: true})); },
                 getProductImage(inventoryId) { const p = this.inventory.find(i => i.id === inventoryId); return p ? p.image : null; },
 
-                // ============ CURRENCY & LANGUAGE ============
-                changeCurrency(newCurrency) { this.currency = newCurrency; localStorage.setItem('currency', newCurrency); this.toast(this.lang === 'en' ? `Currency: ${newCurrency}` : `العملة: ${newCurrency}`, 'success'); },
-                cycleCurrency() {
-                    const currencies = ['د.ج', '€', '$', 'د.م', 'ر.س', 'د.إ', 'ج.م', 'د.ت'];
-                    let currentIndex = currencies.indexOf(this.currency); if (currentIndex === -1) currentIndex = 0; 
-                    const nextIndex = (currentIndex + 1) % currencies.length; this.currency = currencies[nextIndex];
-                    localStorage.setItem('currency', this.currency);
-                    this.toast(this.lang === 'en' ? `Currency: ${this.currency}` : `العملة: ${this.currency}`, 'success');
-                },
-                toggleLanguage() {
-                    this.lang = this.lang === 'ar' ? 'en' : 'ar'; this.dir = this.lang === 'en' ? 'ltr' : 'rtl';
-                    localStorage.setItem('lang', this.lang); document.documentElement.setAttribute('dir', this.dir); document.documentElement.setAttribute('lang', this.lang);
-                    document.body.style.fontFamily = this.lang === 'en' ? 'Arial, sans-serif' : "'Cairo', sans-serif";
-                    this.toast(this.lang === 'en' ? 'Language: English' : 'اللغة: العربية', 'success');
-                },
-                toggleDark() { this.darkMode = !this.darkMode; document.documentElement.classList.toggle('dark', this.darkMode); localStorage.setItem('darkMode', this.darkMode); },
-                loadDarkMode() { this.darkMode = localStorage.getItem('darkMode') === 'true'; document.documentElement.classList.toggle('dark', this.darkMode); },
-                                // ============ CALCULATIONS (GETTERS) ============
+                // ============ حسابات السلة ============
                 get cartTotal() { return this.cart.reduce((sum, i) => sum + (i.itemPrice * i.quantity), 0); },
                 get cartItemCount() { return this.cart.reduce((sum, i) => sum + i.quantity, 0); },
                 get editCartTotal() { if (!this.editSaleForm.items) return 0; return this.editSaleForm.items.reduce((sum, i) => sum + (i.itemPrice * i.quantity), 0); },
                 get priceEditTotal() { if (!this.priceEditSale || !this.priceEditSale.items) return 0; return this.priceEditSale.items.reduce((sum, i) => sum + (i.itemPrice * i.quantity), 0); },
                 saleTotal(sale) { if (!sale || !sale.items) return 0; return sale.items.reduce((sum, i) => sum + (i.itemPrice * i.quantity), 0); },
-                saleItemsSummary(sale) { if (!sale || !sale.items || sale.items.length === 0) return '—'; if (sale.items.length === 1) return sale.items[0].itemName + ' × ' + sale.items[0].quantity; return sale.items[0].itemName + ' (+' + (sale.items.length - 1) + ' ' + (this.lang === 'en' ? 'items' : 'منتج') + ')'; },
+                saleItemsSummary(sale) { if (!sale || !sale.items || sale.items.length === 0) return '—'; if (sale.items.length === 1) return sale.items[0].itemName + ' × ' + sale.items[0].quantity; return sale.items[0].itemName + ' (+' + (sale.items.length - 1) + ' منتج)'; },
                 
+                // ============ السلة ============
+                onCartProductSelect() { const p = this.inventory.find(i => i.id == this.cartItemForm.inventoryId); if (p) this.cartItemForm.itemPrice = p.sellPrice; },
+                addToCart() {
+                    const p = this.inventory.find(i => i.id == this.cartItemForm.inventoryId);
+                    if (!p) return this.toast(this.lang === 'en' ? 'Select a valid product' : 'اختر منتج صحيح', 'error');
+                    if (this.cartItemForm.quantity < 1) return this.toast(this.lang === 'en' ? 'Quantity must be at least 1' : 'الكمية يجب أن تكون 1 على الأقل', 'error');
+                    const inCart = this.cart.filter(c => c.inventoryId === p.id).reduce((s, c) => s + c.quantity, 0);
+                    if (inCart + this.cartItemForm.quantity > p.stock) return this.toast((this.lang === 'en' ? 'Not enough stock (Available: ' : 'الكمية غير متوفرة (المتوفر: ') + p.stock + ')', 'error');
+                    const existing = this.cart.find(c => c.inventoryId === p.id);
+                    if (existing) { existing.quantity += this.cartItemForm.quantity; existing.itemPrice = this.cartItemForm.itemPrice; } 
+                    else { this.cart.push({ inventoryId: p.id, itemName: p.name, itemPrice: this.cartItemForm.itemPrice || p.sellPrice, quantity: this.cartItemForm.quantity }); }
+                    this.cartItemForm = { inventoryId: '', quantity: 1, itemPrice: 0 };
+                    this.toast(this.lang === 'en' ? 'Added to cart' : 'تمت إضافة المنتج للسلة', 'success');
+                },
+                removeFromCart(index) { this.cart.splice(index, 1); },
+                updateCartQuantity(index, delta) {
+                    const item = this.cart[index];
+                    const p = this.inventory.find(i => i.id === item.inventoryId);
+                    const newQty = item.quantity + delta;
+                    if (newQty < 1) return this.removeFromCart(index);
+                    if (p && newQty > p.stock) return this.toast((this.lang === 'en' ? 'Max available: ' : 'الكمية القصوى المتوفرة: ') + p.stock, 'warning');
+                    item.quantity = newQty;
+                },
+                updateCartPrice(index, newPrice) { this.cart[index].itemPrice = Number(newPrice) || 0; },
+
+                // ============ دوال اللغة والعملة ============
+                toggleLanguage() {
+                    this.lang = this.lang === 'ar' ? 'en' : 'ar';
+                    this.dir = this.lang === 'en' ? 'ltr' : 'rtl';
+                    localStorage.setItem('lang', this.lang);
+                    document.documentElement.setAttribute('dir', this.dir);
+                    document.documentElement.setAttribute('lang', this.lang);
+                    document.body.style.fontFamily = this.lang === 'en' ? 'Arial, sans-serif' : "'Cairo', sans-serif";
+                    this.toast(this.lang === 'en' ? 'Language: English' : 'اللغة: العربية', 'success');
+                },
+                cycleCurrency() {
+                    const currencies = ['د.ج', '€', '$', 'د.م', 'ر.س', 'د.إ', 'ج.م', 'د.ت'];
+                    let currentIndex = currencies.indexOf(this.currency);
+                    if (currentIndex === -1) currentIndex = 0;
+                    this.currency = currencies[(currentIndex + 1) % currencies.length];
+                    localStorage.setItem('currency', this.currency);
+                    this.toast((this.lang === 'en' ? 'Currency: ' : 'العملة: ') + this.currency, 'success');
+                },
+                                // ============ الإحصائيات (Getters) ============
                 get todaySalesCount() { const today = new Date().toISOString().split('T')[0]; return this.sales.filter(s => s.date === today).length; },
                 get totalSalesAmount() { return this.sales.reduce((s, x) => s + this.saleTotal(x), 0); },
                 get netProfits() { return this.sales.reduce((sum, s) => { let saleCost = 0; (s.items || []).forEach(item => { const p = this.inventory.find(i => i.id === item.inventoryId); if (p) saleCost += p.buyPrice * item.quantity; }); return sum + (this.saleTotal(s) - saleCost); }, 0); },
@@ -919,39 +680,59 @@
                 get unreadCount() { return this.notifications.filter(n => !n.read).length; },
                 get recentSales() { return this.sales.slice(0, 5); },
                 get lastShift() { return this.closedShifts.length > 0 ? this.closedShifts[0] : null; },
-                
-                get filteredSales() { return this.sales.filter(s => { const search = this.salesSearch.toLowerCase(); const matchSearch = !this.salesSearch || s.customerName.toLowerCase().includes(search) || (s.items || []).some(i => i.itemName.toLowerCase().includes(search)); const matchFilter = !this.salesFilter || s.status === this.salesFilter; return matchSearch && matchFilter; }); },
-                get filteredCustomers() { if (!this.customersSearch) return this.customers; const q = this.customersSearch.toLowerCase(); return this.customers.filter(c => c.name.toLowerCase().includes(q) || (c.phone || '').includes(q)); },
-                get filteredInventory() { if (!this.inventorySearch) return this.inventory; const q = this.inventorySearch.toLowerCase(); return this.inventory.filter(i => i.name.toLowerCase().includes(q) || (i.barcode || '').includes(q) || (i.category || '').toLowerCase().includes(q)); },
-                
-                getCustomerTotal(cid) { const cust = this.customers.find(c => c.id === cid); if (!cust) return 0; return this.sales.filter(s => s.customerName === cust.name).reduce((sum, s) => sum + this.saleTotal(s), 0); },
-                getCustomerDebt(cid) { const cust = this.customers.find(c => c.id === cid); if (!cust) return 0; return this.debts.filter(d => d.customerName === cust.name).reduce((sum, d) => sum + (d.totalAmount - d.paidAmount), 0); },
-
-                // ============ CART ACTIONS ============
-                onCartProductSelect() { const p = this.inventory.find(i => i.id == this.cartItemForm.inventoryId); if (p) this.cartItemForm.itemPrice = p.sellPrice; },
-                addToCart() {
-                    const p = this.inventory.find(i => i.id == this.cartItemForm.inventoryId);
-                    if (!p) return this.toast(this.lang === 'en' ? 'Select a valid product' : 'اختر منتج صحيح', 'error');
-                    if (this.cartItemForm.quantity < 1) return this.toast(this.lang === 'en' ? 'Qty must be 1+' : 'الكمية يجب أن تكون 1 على الأقل', 'error');
-                    const inCart = this.cart.filter(c => c.inventoryId === p.id).reduce((s, c) => s + c.quantity, 0);
-                    if (inCart + this.cartItemForm.quantity > p.stock) return this.toast(this.lang === 'en' ? `Not enough stock (Available: ${p.stock})` : `الكمية غير متوفرة (المتوفر: ${p.stock})`, 'error');
-                    const existing = this.cart.find(c => c.inventoryId === p.id);
-                    if (existing) { existing.quantity += this.cartItemForm.quantity; existing.itemPrice = this.cartItemForm.itemPrice; } 
-                    else { this.cart.push({ inventoryId: p.id, itemName: p.name, itemPrice: this.cartItemForm.itemPrice || p.sellPrice, quantity: this.cartItemForm.quantity }); }
-                    this.cartItemForm = { inventoryId: '', quantity: 1, itemPrice: 0 }; this.cartProductSearch = ''; this.productSuggestions = [];
-                    this.toast(this.lang === 'en' ? 'Added to cart' : 'تمت الإضافة للسلة', 'success');
+                get filteredSales() {
+                    return this.sales.filter(s => {
+                        const search = this.salesSearch.toLowerCase();
+                        const matchSearch = !this.salesSearch || s.customerName.toLowerCase().includes(search) || (s.items || []).some(i => i.itemName.toLowerCase().includes(search));
+                        const matchFilter = !this.salesFilter || s.status === this.salesFilter;
+                        return matchSearch && matchFilter;
+                    });
                 },
-                removeFromCart(index) { this.cart.splice(index, 1); },
-                updateCartQuantity(index, delta) { const item = this.cart[index]; const p = this.inventory.find(i => i.id === item.inventoryId); const newQty = item.quantity + delta; if (newQty < 1) return this.removeFromCart(index); if (p && newQty > p.stock) return this.toast(`Max: ${p.stock}`, 'warning'); item.quantity = newQty; },
-                updateCartPrice(index, newPrice) { this.cart[index].itemPrice = Number(newPrice) || 0; },
-                updateCustomerSuggestions() { if (!this.saleForm.customerName) { this.customerSuggestions = []; return; } const q = this.saleForm.customerName.toLowerCase(); this.customerSuggestions = this.customers.filter(c => c.name.toLowerCase().includes(q) || (c.phone || '').includes(q)); },
-                updateProductSuggestions() { if (!this.cartProductSearch) { this.productSuggestions = []; return; } const q = this.cartProductSearch.toLowerCase(); this.productSuggestions = this.inventory.filter(p => p.name.toLowerCase().includes(q) || (p.barcode || '').includes(q) || (p.category || '').toLowerCase().includes(q)); },
+                get filteredCustomers() {
+                    if (!this.customersSearch) return this.customers;
+                    const q = this.customersSearch.toLowerCase();
+                    return this.customers.filter(c => c.name.toLowerCase().includes(q) || (c.phone || '').includes(q));
+                },
+                get filteredInventory() {
+                    if (!this.inventorySearch) return this.inventory;
+                    const q = this.inventorySearch.toLowerCase();
+                    return this.inventory.filter(i => i.name.toLowerCase().includes(q) || (i.barcode || '').includes(q) || (i.category || '').toLowerCase().includes(q));
+                },
+                getCustomerTotal(cid) {
+                    const cust = this.customers.find(c => c.id === cid);
+                    if (!cust) return 0;
+                    return this.sales.filter(s => s.customerName === cust.name).reduce((sum, s) => sum + this.saleTotal(s), 0);
+                },
+                getCustomerDebt(cid) {
+                    const cust = this.customers.find(c => c.id === cid);
+                    if (!cust) return 0;
+                    return this.debts.filter(d => d.customerName === cust.name).reduce((sum, d) => sum + (d.totalAmount - d.paidAmount), 0);
+                },
+
+                // ============ البحث الذكي ============
+                updateCustomerSuggestions() {
+                    if (!this.saleForm.customerName) { this.customerSuggestions = []; return; }
+                    const q = this.saleForm.customerName.toLowerCase();
+                    this.customerSuggestions = this.customers.filter(c => c.name.toLowerCase().includes(q) || (c.phone || '').includes(q));
+                },
+                updateProductSuggestions() {
+                    if (!this.cartProductSearch) { this.productSuggestions = []; return; }
+                    const q = this.cartProductSearch.toLowerCase();
+                    this.productSuggestions = this.inventory.filter(p => p.name.toLowerCase().includes(q) || (p.barcode || '').includes(q) || (p.category || '').toLowerCase().includes(q));
+                },
                 selectProductFromSearch(p) { this.cartItemForm.inventoryId = p.id; this.cartItemForm.itemPrice = p.sellPrice; this.cartProductSearch = p.name; this.productSuggestions = []; },
 
-                // ============ MAIN ACTIONS ============
+                // ============ إدارة النوافذ ============
                 openModal(type) {
                     this.modals[type] = true;
-                    if (type === 'sale') { this.saleForm = { customerName: '', inventoryId: '', quantity: 1, itemPrice: 0, paymentMethod: 'cash', paidAmount: 0 }; this.cart = []; this.cartItemForm = { inventoryId: '', quantity: 1, itemPrice: 0 }; this.cartProductSearch = ''; this.customerSuggestions = []; this.productSuggestions = []; }
+                    if (type === 'sale') {
+                        this.saleForm = { customerName: '', inventoryId: '', quantity: 1, itemPrice: 0, paymentMethod: 'cash', paidAmount: 0 };
+                        this.cart = [];
+                        this.cartItemForm = { inventoryId: '', quantity: 1, itemPrice: 0 };
+                        this.cartProductSearch = '';
+                        this.customerSuggestions = [];
+                        this.productSuggestions = [];
+                    }
                     if (type === 'inventory') this.invForm = { name: '', category: '', buyPrice: 0, sellPrice: 0, stock: 0, image: null, barcode: '' };
                     if (type === 'customer') this.custForm = { name: '', phone: '', address: '', notes: '', lat: null, lng: null };
                     if (type === 'expense') this.expenseForm = { type: 'fuel', amount: 0, description: '' };
@@ -961,131 +742,54 @@
                 saveSettings() { this.closeModal('settings'); this.toast(this.lang === 'en' ? 'Settings saved' : 'تم حفظ الإعدادات', 'success'); },
                 viewProductImage(item) { if (item.image) { this.viewImageSrc = item.image; this.modals.viewImage = true; } },
 
+                // ============ تحديد الموقع (GPS) ============
+                getGeoLocation() {
+                    if (!navigator.geolocation) return this.toast('متصفحك لا يدعم تحديد الموقع الجغرافي', 'error');
+                    this.toast('جاري جلب إحداثيات موقعك...', 'info');
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            this.custForm.lat = position.coords.latitude;
+                            this.custForm.lng = position.coords.longitude;
+                            if(!this.custForm.address) this.custForm.address = 'موقع GPS مباشر';
+                            this.toast('تم تحديد الموقع بنجاح 📍', 'success');
+                        },
+                        () => { this.toast('فشل جلب الموقع، تأكد من تفعيل الـ GPS', 'error'); },
+                        { timeout: 10000, enableHighAccuracy: true }
+                    );
+                },
+                                // ============ إضافة فاتورة بيع ============
                 addSale() {
                     if (this.cart.length === 0) return this.toast(this.lang === 'en' ? 'Cart is empty' : 'السلة فارغة', 'error');
                     if (!this.saleForm.customerName) return this.toast(this.lang === 'en' ? 'Enter customer name' : 'أدخل اسم الزبون', 'error');
                     const total = this.cartTotal;
-                    const sale = { id: Date.now(), customerName: this.saleForm.customerName, items: JSON.parse(JSON.stringify(this.cart)), status: this.saleForm.paymentMethod === 'cash' ? 'paid' : (this.saleForm.paymentMethod === 'partial' ? 'pending' : 'debt'), paymentMethod: this.saleForm.paymentMethod, date: new Date().toISOString().split('T')[0], deliveryMethod: 'تسليم مباشر' };
-                    this.sales.unshift(sale);
-                    this.cart.forEach(c => { const p = this.inventory.find(i => i.id === c.inventoryId); if (p) p.stock -= c.quantity; });
-                    if (this.saleForm.paymentMethod !== 'cash') { const paid = this.saleForm.paymentMethod === 'partial' ? (this.saleForm.paidAmount || 0) : 0; this.debts.unshift({ id: Date.now(), customerName: this.saleForm.customerName, totalAmount: total, paidAmount: paid, status: paid >= total ? 'paid' : (paid > 0 ? 'partial' : 'unpaid'), date: sale.date, saleId: sale.id }); }
-                    if (!this.customers.find(c => c.name === this.saleForm.customerName)) this.customers.push({ id: Date.now(), name: this.saleForm.customerName, phone: '', address: '', notes: '', lat: null, lng: null });
-                    this.closeModal('sale'); this.toast(this.lang === 'en' ? 'Invoice saved!' : 'تم حفظ الفاتورة!', 'success');
-                    this.checkStockAlerts();
-                },
-                openEditSale(sale) { this.editSaleForm = { id: sale.id, customerName: sale.customerName, items: JSON.parse(JSON.stringify(sale.items)) }; this.modals.editSale = true; },
-                saveEditSale() {
-                    const original = this.sales.find(s => s.id === this.editSaleForm.id); if (!original) return;
-                    original.items.forEach(oldItem => { const p = this.inventory.find(i => i.id === oldItem.inventoryId); if (p) p.stock += oldItem.quantity; });
-                    for (const newItem of this.editSaleForm.items) { const p = this.inventory.find(i => i.id === newItem.inventoryId); if (p) { p.stock -= newItem.quantity; } }
-                    original.customerName = this.editSaleForm.customerName; original.items = JSON.parse(JSON.stringify(this.editSaleForm.items));
-                    this.closeModal('editSale'); this.toast(this.lang === 'en' ? 'Invoice updated' : 'تم التحديث', 'success');
-                },
-                deleteSale(sale) {
-                    this.confirmMsg = this.lang === 'en' ? 'Delete this invoice? Stock will be restored.' : 'حذف هذه الفاتورة؟ سيتم إرجاع المخزون.';
-                    this.pendingConfirm = () => { sale.items.forEach(item => { const p = this.inventory.find(i => i.id === item.inventoryId); if (p) p.stock += item.quantity; }); this.sales = this.sales.filter(s => s.id !== sale.id); this.toast(this.lang === 'en' ? 'Deleted' : 'تم الحذف', 'success'); };
-                    this.modals.confirm = true;
-                },
-
-                addInventory() { this.inventory.push({ ...this.invForm, id: Date.now(), maxStock: Math.max(this.invForm.stock * 2, 10) }); this.closeModal('inventory'); this.toast(this.lang === 'en' ? 'Product added' : 'تمت الإضافة', 'success'); },
-                openEditInventory(item) { this.editInvForm = JSON.parse(JSON.stringify(item)); this.modals.editInventory = true; },
-                saveEditInventory() { const idx = this.inventory.findIndex(i => i.id === this.editInvForm.id); if (idx !== -1) { this.inventory[idx] = { ...this.editInvForm }; this.closeModal('editInventory'); } },
-                adjustStock(id, delta) { const p = this.inventory.find(i => i.id === id); if (p) p.stock = Math.max(0, p.stock + delta); },
-                deleteInventory(id) { this.confirmMsg = this.lang === 'en' ? 'Delete product?' : 'حذف المنتج؟'; this.pendingConfirm = () => { this.inventory = this.inventory.filter(i => i.id !== id); }; this.modals.confirm = true; },
-                handleImageUpload(event, target) {
-                    const file = event.target.files[0]; if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = (e) => { const img = new Image(); img.onload = () => { const canvas = document.createElement('canvas'); let width = img.width; let height = img.height; const MAX_WIDTH = 600; if (width > MAX_WIDTH) { height = Math.round((height * MAX_WIDTH) / width); width = MAX_WIDTH; } canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height); const compressed = canvas.toDataURL('image/jpeg', 0.7); if (target === 'inventory') this.invForm.image = compressed; else if (target === 'editInventory') this.editInvForm.image = compressed; else if (target === 'settings') this.shopInfo.logo = compressed; this.toast('Image uploaded', 'success'); }; img.src = e.target.result; }; reader.readAsDataURL(file);
-                },
-
-                addCustomer() { this.customers.push({ ...this.custForm, id: Date.now() }); this.closeModal('customer'); this.toast('تمت الإضافة', 'success'); },
-                deleteCustomer(id) { this.confirmMsg = 'حذف الزبون؟'; this.pendingConfirm = () => { this.customers = this.customers.filter(c => c.id !== id); }; this.modals.confirm = true; },
-                callCustomer(phone) { window.location.href = `tel:${phone}`; },
-                viewCustomerHistory(c) { this.historyCustomerName = c.name; this.historyItems = this.sales.filter(s => s.customerName === c.name).map(s => ({ id: s.id, itemName: this.saleItemsSummary(s), date: s.date, amount: this.saleTotal(s) })); this.modals.history = true; },
-
-                openPaymentModal(d) { this.selectedDebt = d; this.paymentAmount = d.totalAmount - d.paidAmount; this.modals.payment = true; },
-                addPayment() { if (!this.selectedDebt) return; const d = this.selectedDebt; if (this.paymentAmount > (d.totalAmount - d.paidAmount)) return this.toast('Error', 'error'); d.paidAmount += this.paymentAmount; d.status = d.paidAmount >= d.totalAmount ? 'paid' : 'partial'; this.debtPayments.push({ id: Date.now(), debtId: d.id, amount: this.paymentAmount, date: new Date().toISOString().split('T')[0] }); this.closeModal('payment'); this.toast('تم الدفع', 'success'); },
-                viewDebtHistory(d) { this.historyCustomerName = d.customerName; this.historyItems = this.debtPayments.filter(p => p.debtId === d.id).map(p => ({ id: p.id, itemName: 'دفعة دين', amount: p.amount, date: p.date })); this.modals.history = true; },
-
-                addExpense() { if (!this.expenseForm.amount || this.expenseForm.amount <= 0) return; this.expenses.unshift({ id: Date.now(), type: this.expenseForm.type, amount: Number(this.expenseForm.amount), description: this.expenseForm.description, date: new Date().toISOString().split('T')[0] }); this.closeModal('expense'); this.toast('تم حفظ المصروف', 'success'); },
-                deleteExpense(e) { this.confirmMsg = 'حذف المصروف؟'; this.pendingConfirm = () => { this.expenses = this.expenses.filter(x => x.id !== e.id); }; this.modals.confirm = true; },
-
-                openClotureConfirm() { this.confirmMsg = this.lang === 'en' ? 'Close this shift and start a new one?' : 'إغلاق الجولة والبدء بجولة جديدة؟'; this.pendingConfirm = () => this.closeShift(); this.modals.confirm = true; },
-                closeShift() {
-                    const endDate = new Date().toISOString().split('T')[0];
-                    this.closedShifts.unshift({ id: Date.now(), number: this.shiftNumber, startDate: this.shiftStartDate, endDate: endDate, salesCount: this.sales.length, totalSales: this.totalSalesAmount, totalExpenses: this.totalExpenses, netProfits: this.netProfits, realNetProfit: this.realNetProfit, sales: JSON.parse(JSON.stringify(this.sales)), expenses: JSON.parse(JSON.stringify(this.expenses)) });
-                    this.sales = []; this.expenses = []; this.shiftNumber += 1; this.shiftStartDate = endDate;
-                    this.toast('تم إغلاق الجولة', 'success');
-                },
-                toggleShiftDetails(id) { this.expandedShift = this.expandedShift === id ? null : id; },
-                confirmAction() { if (this.pendingConfirm) this.pendingConfirm(); this.modals.confirm = false; this.pendingConfirm = null; },
-                checkStockAlerts() { this.inventory.filter(i => i.stock < 5).forEach(i => { const exists = this.notifications.find(n => n.type === 'stock' && n.message.includes(i.name)); if (!exists) this.pushNotification('stock', 'نقص مخزون', `${i.name} - المتبقي ${i.stock} فقط`); }); },
-
-                getGeoLocation() {
-                    if (!navigator.geolocation) return; navigator.geolocation.getCurrentPosition((position) => { this.custForm.lat = position.coords.latitude; this.custForm.lng = position.coords.longitude; this.toast('تم تحديد الموقع 📍', 'success'); }, () => { this.toast('فشل تحديد الموقع', 'error'); }, { timeout: 10000, enableHighAccuracy: true });
-                },
-
-                // ============ BARCODE & PRINTING ============
-                openBarcodeScanner(target) { this.barcodeTarget = target; this.barcodeManualInput = ''; this.cameraError = ''; this.cameraLoading = true; this.modals.barcode = true; this.$nextTick(() => { setTimeout(() => this.startCameraScan(), 400); }); },
-                closeBarcodeScanner() { this.stopCameraScan(); this.modals.barcode = false; this.barcodeTarget = null; this.cameraError = ''; this.cameraLoading = false; },
-                async startCameraScan() {
-                    try {
-                        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { this.cameraLoading = false; this.cameraError = 'المتصفح لا يدعم الكاميرا.'; return; }
-                        if (typeof Html5Qrcode === 'undefined') { this.cameraLoading = false; this.cameraError = 'مكتبة المسح لم تُحمّل.'; return; }
-                        if (!document.getElementById('barcodeReader')) { this.cameraLoading = false; return; }
-                        await this.stopCameraScan();
-                        this.barcodeScanner = new Html5Qrcode("barcodeReader");
-                        await this.barcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 150 } }, (decodedText) => { try { if (navigator.vibrate) navigator.vibrate(100); } catch(e) {} this.applyBarcode(decodedText); }, () => {});
-                        this.cameraLoading = false; this.cameraError = '';
-                    } catch (err) { this.cameraLoading = false; this.cameraError = 'فشل فتح الكاميرا. تأكد من السماح بالوصول.'; }
-                },
-                async stopCameraScan() { if (this.barcodeScanner) { try { await this.barcodeScanner.stop(); this.barcodeScanner.clear(); } catch (e) {} this.barcodeScanner = null; } },
-                applyBarcode(code) {
-                    if (!code || !code.trim()) return; const trimmed = code.trim();
-                    if (this.barcodeTarget === 'sale') { const p = this.inventory.find(i => i.barcode === trimmed); if (!p) return this.toast('غير موجود', 'error'); this.selectProductFromSearch(p); this.closeBarcodeScanner(); }
-                    else if (this.barcodeTarget === 'inventory') { this.invForm.barcode = trimmed; this.closeBarcodeScanner(); }
-                },
-
-                printReceipt(sale) {
-                    const total = this.saleTotal(sale);
-                    const itemsRows = (sale.items || []).map(i => `<tr><td style="padding: 4px 0;">${i.itemName}</td><td style="text-align:center;">${i.quantity}</td><td style="text-align:left;">${i.itemPrice} ${this.currency}</td><td style="text-align:left; font-weight:bold;">${(i.itemPrice * i.quantity).toLocaleString()} ${this.currency}</td></tr>`).join('');
-                    const html = `<div style="font-family: Cairo, sans-serif; max-width: 360px; margin: 20px auto; padding: 20px; text-align: right;" dir="rtl"><h2 style="text-align:center;">${this.shopInfo.name || 'التاجر المتنقل'}</h2><hr style="border: none; border-top: 1px dashed #000; margin: 12px 0;"><p style="margin: 3px 0; font-size: 12px;"><strong>الزبون:</strong> ${sale.customerName}</p><hr style="border: none; border-top: 1px dashed #000; margin: 12px 0;"><table style="width: 100%; border-collapse: collapse; font-size: 12px;"><thead><tr style="border-bottom: 1px solid #000;"><th style="text-align:right;">المنتج</th><th>كمية</th><th>سعر</th><th>إجمالي</th></tr></thead><tbody>${itemsRows}</tbody></table><hr style="border: none; border-top: 2px dashed #000; margin: 12px 0;"><p style="text-align: center; font-size: 16px; font-weight: bold;">الإجمالي: ${total.toLocaleString()} ${this.currency}</p></div>`;
-                    document.getElementById('receiptPrint').innerHTML = html; window.print();
-                },
-
-                // ============ CHARTS ============
-                renderCharts() {
-                    if (this.currentTab !== 'dashboard') return;
-                    this.$nextTick(() => {
-                        const days = []; const totals = [];
-                        for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); const dateStr = d.toISOString().split('T')[0]; days.push(d.toLocaleDateString(this.lang === 'en' ? 'en-US' : 'ar-DZ', { weekday: 'short' })); totals.push(this.sales.filter(s => s.date === dateStr).reduce((sum, s) => sum + this.saleTotal(s), 0)); }
-                        const ctx1 = document.getElementById('salesChart');
-                        if (ctx1) { if (this.charts.sales) this.charts.sales.destroy(); this.charts.sales = new Chart(ctx1, { type: 'line', data: { labels: days, datasets: [{ label: 'Sales', data: totals, borderColor: '#16a34a', backgroundColor: 'rgba(22, 163, 74, 0.1)', fill: true, tension: 0.4, borderWidth: 3 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } }); }
-                        const productTotals = {}; this.sales.forEach(s => { (s.items || []).forEach(item => { productTotals[item.itemName] = (productTotals[item.itemName] || 0) + item.quantity; }); });
-                        const ctx2 = document.getElementById('productsChart');
-                        if (ctx2) { if (this.charts.products) this.charts.products.destroy(); this.charts.products = new Chart(ctx2, { type: 'doughnut', data: { labels: Object.keys(productTotals), datasets: [{ data: Object.values(productTotals), backgroundColor: ['#16a34a', '#22c55e', '#f59e0b', '#3b82f6', '#ef4444', '#8b5cf6', '#ec4899'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false } }); }
-                    });
-                }
-            }
-        }
-        addSale() {
-                    if (this.cart.length === 0) return this.toast(this.lang === 'en' ? 'Cart is empty' : 'السلة فارغة', 'error');
-                    if (!this.saleForm.customerName) return this.toast(this.lang === 'en' ? 'Enter customer name' : 'أدخل اسم الزبون', 'error');
-                    const total = this.cartTotal;
-                    const sale = { id: Date.now(), customerName: this.saleForm.customerName, items: JSON.parse(JSON.stringify(this.cart)), status: this.saleForm.paymentMethod === 'cash' ? 'paid' : (this.saleForm.paymentMethod === 'partial' ? 'pending' : 'debt'), paymentMethod: this.saleForm.paymentMethod, date: new Date().toISOString().split('T')[0], deliveryMethod: 'تسليم مباشر' };
+                    const sale = {
+                        id: Date.now(),
+                        customerName: this.saleForm.customerName,
+                        items: JSON.parse(JSON.stringify(this.cart)),
+                        status: this.saleForm.paymentMethod === 'cash' ? 'paid' : (this.saleForm.paymentMethod === 'partial' ? 'pending' : 'debt'),
+                        paymentMethod: this.saleForm.paymentMethod,
+                        date: new Date().toISOString().split('T')[0]
+                    };
                     this.sales.unshift(sale);
                     this.cart.forEach(c => { const p = this.inventory.find(i => i.id === c.inventoryId); if (p) p.stock -= c.quantity; });
                     if (this.saleForm.paymentMethod !== 'cash') {
                         const paid = this.saleForm.paymentMethod === 'partial' ? (this.saleForm.paidAmount || 0) : 0;
                         this.debts.unshift({ id: Date.now(), customerName: this.saleForm.customerName, totalAmount: total, paidAmount: paid, status: paid >= total ? 'paid' : (paid > 0 ? 'partial' : 'unpaid'), date: sale.date, saleId: sale.id });
                     }
-                    if (!this.customers.find(c => c.name === this.saleForm.customerName)) this.customers.push({ id: Date.now(), name: this.saleForm.customerName, phone: '', address: '', notes: '', lat: null, lng: null });
-                    this.closeModal('sale'); this.toast(this.lang === 'en' ? 'Invoice saved' : 'تم حفظ الفاتورة بنجاح', 'success');
+                    if (!this.customers.find(c => c.name === this.saleForm.customerName)) {
+                        this.customers.push({ id: Date.now(), name: this.saleForm.customerName, phone: '', address: '', notes: '', lat: null, lng: null });
+                    }
+                    this.closeModal('sale');
+                    this.toast(this.lang === 'en' ? 'Invoice saved' : 'تم حفظ الفاتورة بنجاح', 'success');
                     this.pushNotification('sale', 'فاتورة جديدة', `${sale.customerName} - ${total.toLocaleString()} ${this.currency}`);
                     this.checkStockAlerts();
                 },
 
-                openEditSale(sale) { this.editSaleForm = { id: sale.id, customerName: sale.customerName, items: JSON.parse(JSON.stringify(sale.items)) }; this.modals.editSale = true; },
+                // ============ تعديل الفاتورة ============
+                openEditSale(sale) {
+                    this.editSaleForm = { id: sale.id, customerName: sale.customerName, items: JSON.parse(JSON.stringify(sale.items)) };
+                    this.modals.editSale = true;
+                },
                 saveEditSale() {
                     const original = this.sales.find(s => s.id === this.editSaleForm.id); if (!original) return;
                     if (this.editSaleForm.items.length === 0) return this.toast('الفاتورة فارغة', 'error');
@@ -1096,85 +800,142 @@
                         if (p.stock < newItem.quantity) { this.editSaleForm.items.forEach(ni => { const pp = this.inventory.find(i => i.id === ni.inventoryId); if (pp) pp.stock += ni.quantity; }); original.items.forEach(oi => { const pp = this.inventory.find(i => i.id === oi.inventoryId); if (pp) pp.stock -= oi.quantity; }); return this.toast(`كمية ${p.name} غير متوفرة`, 'error'); }
                         p.stock -= newItem.quantity;
                     }
-                    original.customerName = this.editSaleForm.customerName; original.items = JSON.parse(JSON.stringify(this.editSaleForm.items));
+                    original.customerName = this.editSaleForm.customerName;
+                    original.items = JSON.parse(JSON.stringify(this.editSaleForm.items));
                     const linkedDebt = this.debts.find(d => d.saleId === original.id);
-                    if (linkedDebt) { const newTotal = this.saleTotal(original); linkedDebt.totalAmount = newTotal; linkedDebt.paidAmount = Math.min(linkedDebt.paidAmount, newTotal); linkedDebt.status = linkedDebt.paidAmount >= newTotal ? 'paid' : (linkedDebt.paidAmount > 0 ? 'partial' : 'unpaid'); }
-                    this.closeModal('editSale'); this.toast(this.lang === 'en' ? 'Invoice updated' : 'تم التحديث', 'success');
+                    if (linkedDebt) {
+                        const newTotal = this.saleTotal(original);
+                        linkedDebt.totalAmount = newTotal;
+                        linkedDebt.paidAmount = Math.min(linkedDebt.paidAmount, newTotal);
+                        linkedDebt.status = linkedDebt.paidAmount >= newTotal ? 'paid' : (linkedDebt.paidAmount > 0 ? 'partial' : 'unpaid');
+                    }
+                    this.closeModal('editSale');
+                    this.toast(this.lang === 'en' ? 'Invoice updated' : 'تم التحديث', 'success');
                 },
 
+                // ============ تعديل السعر ============
                 openPriceModal(sale) { this.priceEditSale = JSON.parse(JSON.stringify(sale)); this.modals.priceEdit = true; },
                 updateSaleItemPrice(idx, newPrice) { this.priceEditSale.items[idx].itemPrice = Number(newPrice) || 0; },
                 savePriceEdit() {
                     const original = this.sales.find(s => s.id === this.priceEditSale.id); if (!original) return;
                     original.items = JSON.parse(JSON.stringify(this.priceEditSale.items));
                     const linkedDebt = this.debts.find(d => d.saleId === original.id);
-                    if (linkedDebt) { const newTotal = this.saleTotal(original); linkedDebt.totalAmount = newTotal; linkedDebt.paidAmount = Math.min(linkedDebt.paidAmount, newTotal); linkedDebt.status = linkedDebt.paidAmount >= newTotal ? 'paid' : (linkedDebt.paidAmount > 0 ? 'partial' : 'unpaid'); }
-                    this.closeModal('priceEdit'); this.toast('تم تحديث الأسعار', 'success');
+                    if (linkedDebt) {
+                        const newTotal = this.saleTotal(original);
+                        linkedDebt.totalAmount = newTotal;
+                        linkedDebt.paidAmount = Math.min(linkedDebt.paidAmount, newTotal);
+                        linkedDebt.status = linkedDebt.paidAmount >= newTotal ? 'paid' : (linkedDebt.paidAmount > 0 ? 'partial' : 'unpaid');
+                    }
+                    this.closeModal('priceEdit');
+                    this.toast('تم تحديث الأسعار', 'success');
                 },
 
+                // ============ حذف الفاتورة ============
                 deleteSale(sale) {
                     this.confirmMsg = (this.lang === 'en' ? 'Delete invoice for ' : 'حذف فاتورة ') + sale.customerName + '?';
                     this.pendingConfirm = () => {
                         sale.items.forEach(item => { const p = this.inventory.find(i => i.id === item.inventoryId); if (p) p.stock += item.quantity; });
-                        const linkedDebtIndex = this.debts.findIndex(d => d.saleId === sale.id); if (linkedDebtIndex !== -1) this.debts.splice(linkedDebtIndex, 1);
-                        this.sales = this.sales.filter(s => s.id !== sale.id); this.toast('تم الحذف', 'success');
+                        const linkedDebtIndex = this.debts.findIndex(d => d.saleId === sale.id);
+                        if (linkedDebtIndex !== -1) this.debts.splice(linkedDebtIndex, 1);
+                        this.sales = this.sales.filter(s => s.id !== sale.id);
+                        this.toast('تم الحذف', 'success');
                     };
                     this.modals.confirm = true;
                 },
 
+                // ============ الطباعة ============
                 printReceipt(sale) {
                     const total = this.saleTotal(sale);
                     const itemsRows = (sale.items || []).map(i => `<tr><td style="padding:4px 0;">${i.itemName}</td><td style="text-align:center;">${i.quantity}</td><td style="text-align:left;">${i.itemPrice} ${this.currency}</td><td style="text-align:left;font-weight:bold;">${(i.itemPrice*i.quantity).toLocaleString()} ${this.currency}</td></tr>`).join('');
-                    const html = `<div style="font-family:Cairo,sans-serif;max-width:360px;margin:20px auto;padding:20px;text-align:right;" dir="rtl"><h2 style="text-align:center;">${this.shopInfo.name}</h2><p style="text-align:center;font-size:12px;">رقم: #${String(sale.id).slice(-4)} | التاريخ: ${sale.date}</p><p>الزبون: ${sale.customerName}</p><hr><table style="width:100%;font-size:12px;"><thead><tr><th style="text-align:right;">المنتج</th><th>كمية</th><th style="text-align:left;">سعر</th><th style="text-align:left;">إجمالي</th></tr></thead><tbody>${itemsRows}</tbody></table><hr><p style="text-align:center;font-size:18px;font-weight:bold;">الإجمالي: ${total.toLocaleString()} ${this.currency}</p></div>`;
-                    document.getElementById('receiptPrint').innerHTML = html; window.print();
+                    const html = `<div style="font-family:Cairo,sans-serif;max-width:360px;margin:20px auto;padding:20px;text-align:right;" dir="rtl"><h2 style="text-align:center;">${this.shopInfo.name}</h2><p style="text-align:center;font-size:12px;">#${String(sale.id).slice(-4)} | ${sale.date}</p><p>${sale.customerName}</p><hr><table style="width:100%;font-size:12px;"><thead><tr><th style="text-align:right;">المنتج</th><th>كمية</th><th style="text-align:left;">سعر</th><th style="text-align:left;">إجمالي</th></tr></thead><tbody>${itemsRows}</tbody></table><hr><p style="text-align:center;font-size:18px;font-weight:bold;">${total.toLocaleString()} ${this.currency}</p></div>`;
+                    document.getElementById('receiptPrint').innerHTML = html;
+                    window.print();
                 },
+
+                // ============ تصدير PDF ============
                 async exportPDF(sale) {
                     try {
                         const total = this.saleTotal(sale);
                         const itemsRows = (sale.items || []).map(i => `<tr><td style="padding:6px;border-bottom:1px solid #eee;">${i.itemName}</td><td style="text-align:center;padding:6px;border-bottom:1px solid #eee;">${i.quantity}</td><td style="text-align:left;padding:6px;border-bottom:1px solid #eee;">${i.itemPrice} ${this.currency}</td><td style="text-align:left;padding:6px;border-bottom:1px solid #eee;font-weight:bold;">${(i.itemPrice*i.quantity).toLocaleString()} ${this.currency}</td></tr>`).join('');
                         const tempDiv = document.createElement('div');
                         tempDiv.style.cssText = 'position:fixed;left:-9999px;top:0;width:400px;font-family:Cairo,sans-serif;direction:rtl;padding:20px;background:white;color:black;';
-                        tempDiv.innerHTML = `<div style="text-align:center;margin-bottom:20px;"><h2 style="margin:0;color:#16a34a;">${this.shopInfo.name}</h2></div><table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:15px;"><thead><tr style="background:#f0fdf4;border-bottom:2px solid #16a34a;"><th style="text-align:right;padding:8px;">المنتج</th><th style="text-align:center;padding:8px;">كمية</th><th style="text-align:left;padding:8px;">سعر</th><th style="text-align:left;padding:8px;">إجمالي</th></tr></thead><tbody>${itemsRows}</tbody></table><div style="background:#16a34a;color:white;padding:12px;border-radius:8px;text-align:center;"><p style="margin:0;font-size:14px;">الإجمالي</p><p style="margin:4px 0 0;font-size:20px;font-weight:bold;">${total.toLocaleString()} ${this.currency}</p></div>`;
+                        tempDiv.innerHTML = `<h2 style="text-align:center;color:#16a34a;">${this.shopInfo.name}</h2><table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr style="background:#f0fdf4;"><th style="text-align:right;padding:8px;">المنتج</th><th style="text-align:center;padding:8px;">كمية</th><th style="text-align:left;padding:8px;">سعر</th><th style="text-align:left;padding:8px;">إجمالي</th></tr></thead><tbody>${itemsRows}</tbody></table><div style="background:#16a34a;color:white;padding:12px;border-radius:8px;text-align:center;margin-top:15px;"><p style="margin:0;">${total.toLocaleString()} ${this.currency}</p></div>`;
                         document.body.appendChild(tempDiv);
                         const canvas = await html2canvas(tempDiv, { scale: 2, backgroundColor: '#ffffff' });
                         document.body.removeChild(tempDiv);
-                        const { jsPDF } = window.jspdf; const pdf = new jsPDF('p', 'mm', 'a4');
-                        const imgData = canvas.toDataURL('image/png'); const pdfWidth = pdf.internal.pageSize.getWidth();
+                        const { jsPDF } = window.jspdf;
+                        const pdf = new jsPDF('p', 'mm', 'a4');
+                        const imgData = canvas.toDataURL('image/png');
+                        const pdfWidth = pdf.internal.pageSize.getWidth();
                         pdf.addImage(imgData, 'PNG', 0, 10, pdfWidth, (canvas.height * pdfWidth) / canvas.width);
-                        pdf.save(`invoice-${sale.id}.pdf`); this.toast('PDF exported', 'success');
+                        pdf.save(`invoice-${sale.id}.pdf`);
+                        this.toast('PDF exported', 'success');
                     } catch(e) { this.toast('PDF Error', 'error'); }
                 },
+
+                // ============ إرسال الواتساب ============
                 sendWhatsApp(sale) {
                     const total = this.saleTotal(sale);
                     let itemsText = '';
                     (sale.items || []).forEach(i => { itemsText += `• ${i.itemName} × ${i.quantity} = ${(i.itemPrice*i.quantity).toLocaleString()} ${this.currency}\n`; });
-                    window.open(`https://wa.me/?text=${encodeURIComponent(`🧾 فاتورة\nالزبون: ${sale.customerName}\n\n${itemsText}\nالإجمالي: ${total.toLocaleString()} ${this.currency}`)}`, '_blank');
+                    window.open(`https://wa.me/?text=${encodeURIComponent(`🧾 فاتورة\n${sale.customerName}\n\n${itemsText}\nالإجمالي: ${total.toLocaleString()} ${this.currency}`)}`, '_blank');
                 },
-
-                addInventory() { this.inventory.push({ ...this.invForm, id: Date.now(), maxStock: Math.max(this.invForm.stock * 2, 10) }); this.closeModal('inventory'); this.toast('تمت الإضافة', 'success'); this.checkStockAlerts(); },
-                openEditInventory(item) { this.editInvForm = JSON.parse(JSON.stringify(item)); this.modals.editInventory = true; },
-                saveEditInventory() { const idx = this.inventory.findIndex(i => i.id === this.editInvForm.id); if (idx !== -1) { this.inventory[idx] = { ...this.editInvForm }; this.closeModal('editInventory'); this.toast('تم التحديث', 'success'); } },
-                adjustStock(id, delta) { const p = this.inventory.find(i => i.id === id); if (p) p.stock = Math.max(0, p.stock + delta); },
-                deleteInventory(id) { this.confirmMsg = 'حذف المنتج؟'; this.pendingConfirm = () => { this.inventory = this.inventory.filter(i => i.id !== id); this.toast('تم الحذف', 'success'); }; this.modals.confirm = true; },
+                                // ============ إدارة المخزون ============
+                addInventory() {
+                    this.inventory.push({ ...this.invForm, id: Date.now(), maxStock: Math.max(this.invForm.stock * 2, 10) });
+                    this.closeModal('inventory');
+                    this.toast(this.lang === 'en' ? 'Product added' : 'تم إضافة المنتج', 'success');
+                    this.checkStockAlerts();
+                },
+                adjustStock(id, delta) {
+                    const p = this.inventory.find(i => i.id === id);
+                    if (p) p.stock = Math.max(0, p.stock + delta);
+                },
+                deleteInventory(id) {
+                    this.confirmMsg = 'حذف المنتج؟';
+                    this.pendingConfirm = () => {
+                        this.inventory = this.inventory.filter(i => i.id !== id);
+                        this.toast('تم الحذف', 'success');
+                    };
+                    this.modals.confirm = true;
+                },
                 handleImageUpload(event, target) {
                     const file = event.target.files[0]; if (!file) return;
                     const reader = new FileReader();
                     reader.onload = (e) => {
                         const img = new Image();
                         img.onload = () => {
-                            const canvas = document.createElement('canvas'); let width = img.width; let height = img.height; const MAX = 600;
+                            const canvas = document.createElement('canvas');
+                            let width = img.width; let height = img.height;
+                            const MAX = 600;
                             if (width > MAX) { height = Math.round((height * MAX) / width); width = MAX; }
-                            canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
+                            canvas.width = width; canvas.height = height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, width, height);
                             const base64 = canvas.toDataURL('image/jpeg', 0.7);
-                            if (target === 'inventory') this.invForm.image = base64; else if (target === 'editInventory') this.editInvForm.image = base64; else if (target === 'settings') this.shopInfo.logo = base64;
+                            if (target === 'inventory') this.invForm.image = base64;
+                            else if (target === 'editInventory') this.editInvForm.image = base64;
+                            else if (target === 'settings') this.shopInfo.logo = base64;
                         };
                         img.src = e.target.result;
                     };
                     reader.readAsDataURL(file);
                 },
 
-                addCustomer() { this.customers.push({ ...this.custForm, id: Date.now() }); this.closeModal('customer'); this.toast('تمت الإضافة', 'success'); },
-                deleteCustomer(id) { this.confirmMsg = 'حذف الزبون؟'; this.pendingConfirm = () => { this.customers = this.customers.filter(c => c.id !== id); this.toast('تم الحذف', 'success'); }; this.modals.confirm = true; },
+                // ============ إدارة الزبائن ============
+                addCustomer() {
+                    this.customers.push({ ...this.custForm, id: Date.now() });
+                    this.closeModal('customer');
+                    this.toast(this.lang === 'en' ? 'Customer added' : 'تم إضافة الزبون', 'success');
+                },
+                deleteCustomer(id) {
+                    this.confirmMsg = 'حذف الزبون؟';
+                    this.pendingConfirm = () => {
+                        this.customers = this.customers.filter(c => c.id !== id);
+                        this.toast('تم الحذف', 'success');
+                    };
+                    this.modals.confirm = true;
+                },
                 callCustomer(phone) { window.location.href = `tel:${phone}`; },
                 viewCustomerHistory(c) {
                     this.historyCustomerName = c.name;
@@ -1184,52 +945,107 @@
                     this.modals.history = true;
                 },
 
-                openPaymentModal(d) { this.selectedDebt = d; this.paymentAmount = d.totalAmount - d.paidAmount; this.modals.payment = true; },
+                // ============ إدارة الديون ============
+                openPaymentModal(d) {
+                    this.selectedDebt = d;
+                    this.paymentAmount = d.totalAmount - d.paidAmount;
+                    this.modals.payment = true;
+                },
                 addPayment() {
                     if (!this.selectedDebt || !this.paymentAmount) return;
-                    const d = this.selectedDebt; if (this.paymentAmount > (d.totalAmount - d.paidAmount)) return this.toast('المبلغ أكبر من المتبقي', 'error');
-                    d.paidAmount += this.paymentAmount; d.status = d.paidAmount >= d.totalAmount ? 'paid' : 'partial';
+                    const d = this.selectedDebt;
+                    if (this.paymentAmount > (d.totalAmount - d.paidAmount)) return this.toast('المبلغ أكبر من المتبقي', 'error');
+                    d.paidAmount += this.paymentAmount;
+                    d.status = d.paidAmount >= d.totalAmount ? 'paid' : 'partial';
                     this.debtPayments.push({ id: Date.now(), debtId: d.id, amount: this.paymentAmount, date: new Date().toISOString().split('T')[0] });
-                    this.closeModal('payment'); this.toast('تم تسجيل الدفع', 'success');
+                    this.closeModal('payment');
+                    this.toast(this.lang === 'en' ? 'Payment recorded' : 'تم تسجيل الدفع', 'success');
                 },
-                viewDebtHistory(d) { this.historyCustomerName = d.customerName; this.historyItems = this.debtPayments.filter(p => p.debtId === d.id).map(p => ({ id: p.id, itemName: '💵 دفعة', amount: p.amount, date: p.date })); this.modals.history = true; },
+                viewDebtHistory(d) {
+                    this.historyCustomerName = d.customerName;
+                    this.historyItems = this.debtPayments.filter(p => p.debtId === d.id).map(p => ({ id: p.id, itemName: '💵 دفعة', amount: p.amount, date: p.date }));
+                    this.modals.history = true;
+                },
 
+                // ============ إدارة المصاريف ============
                 addExpense() {
                     if (!this.expenseForm.amount || this.expenseForm.amount <= 0) return this.toast('أدخل مبلغ صحيح', 'error');
                     this.expenses.unshift({ id: Date.now(), type: this.expenseForm.type, amount: Number(this.expenseForm.amount), description: this.expenseForm.description, date: new Date().toISOString().split('T')[0] });
-                    this.closeModal('expense'); this.toast('تم حفظ المصروف', 'success');
+                    this.closeModal('expense');
+                    this.toast(this.lang === 'en' ? 'Expense saved' : 'تم حفظ المصروف', 'success');
                 },
-                deleteExpense(exp) { this.confirmMsg = 'حذف المصروف؟'; this.pendingConfirm = () => { this.expenses = this.expenses.filter(e => e.id !== exp.id); this.toast('تم الحذف', 'success'); }; this.modals.confirm = true; },
+                deleteExpense(exp) {
+                    this.confirmMsg = 'حذف المصروف؟';
+                    this.pendingConfirm = () => {
+                        this.expenses = this.expenses.filter(e => e.id !== exp.id);
+                        this.toast('تم الحذف', 'success');
+                    };
+                    this.modals.confirm = true;
+                },
 
+                // ============ إغلاق الجولة ============
                 openClotureConfirm() {
                     if (this.sales.length === 0 && this.expenses.length === 0) return this.toast('لا توجد بيانات', 'warning');
-                    this.confirmMsg = `إغلاق الجولة #${this.shiftNumber}؟`; this.pendingConfirm = () => this.closeShift(); this.modals.confirm = true;
+                    this.confirmMsg = `إغلاق الجولة #${this.shiftNumber}؟`;
+                    this.pendingConfirm = () => this.closeShift();
+                    this.modals.confirm = true;
                 },
                 closeShift() {
                     const endDate = new Date().toISOString().split('T')[0];
-                    this.closedShifts.unshift({ id: Date.now(), number: this.shiftNumber, startDate: this.shiftStartDate, endDate: endDate, salesCount: this.sales.length, totalSales: this.totalSalesAmount, totalExpenses: this.totalExpenses, realNetProfit: this.realNetProfit, sales: JSON.parse(JSON.stringify(this.sales)), expenses: JSON.parse(JSON.stringify(this.expenses)), debts: JSON.parse(JSON.stringify(this.debts)), debtPayments: JSON.parse(JSON.stringify(this.debtPayments)), closedAt: new Date().toISOString() });
-                    this.sales = []; this.expenses = []; this.shiftNumber += 1; this.shiftStartDate = endDate;
-                    this.toast('تم إغلاق الجولة', 'success');
+                    this.closedShifts.unshift({
+                        id: Date.now(), number: this.shiftNumber, startDate: this.shiftStartDate, endDate: endDate,
+                        salesCount: this.sales.length, totalSales: this.totalSalesAmount, totalExpenses: this.totalExpenses, realNetProfit: this.realNetProfit,
+                        sales: JSON.parse(JSON.stringify(this.sales)), expenses: JSON.parse(JSON.stringify(this.expenses)),
+                        debts: JSON.parse(JSON.stringify(this.debts)), debtPayments: JSON.parse(JSON.stringify(this.debtPayments)),
+                        closedAt: new Date().toISOString()
+                    });
+                    this.sales = []; this.expenses = [];
+                    this.shiftNumber += 1;
+                    this.shiftStartDate = endDate;
+                    this.toast(this.lang === 'en' ? 'Shift closed' : 'تم إغلاق الجولة', 'success');
                 },
                 toggleShiftDetails(id) { this.expandedShift = this.expandedShift === id ? null : id; },
-                confirmAction() { if (this.pendingConfirm) this.pendingConfirm(); this.modals.confirm = false; this.pendingConfirm = null; },
 
-                changeCurrency(newCurrency) { this.currency = newCurrency; localStorage.setItem('currency', newCurrency); this.toast('تم تغيير العملة', 'success'); },
-                cycleCurrency() {
-                    const currencies = ['د.ج', '€', '$', 'د.م', 'ر.س', 'د.إ', 'ج.م', 'د.ت'];
-                    let currentIndex = currencies.indexOf(this.currency); if (currentIndex === -1) currentIndex = 0; 
-                    this.currency = currencies[(currentIndex + 1) % currencies.length];
-                    localStorage.setItem('currency', this.currency);
-                },
-                toggleLanguage() {
-                    this.lang = this.lang === 'ar' ? 'en' : 'ar'; this.dir = this.lang === 'en' ? 'ltr' : 'rtl';
-                    localStorage.setItem('lang', this.lang); document.documentElement.setAttribute('dir', this.dir); document.documentElement.setAttribute('lang', this.lang);
-                    document.body.style.fontFamily = this.lang === 'en' ? 'Arial, sans-serif' : "'Cairo', sans-serif";
-                    this.toast(this.lang === 'en' ? 'Language: English' : 'اللغة: العربية', 'success');
+                // ============ تأكيد الإجراءات ============
+                confirmAction() {
+                    if (this.pendingConfirm) this.pendingConfirm();
+                    this.modals.confirm = false;
+                    this.pendingConfirm = null;
                 },
 
-                openBarcodeScanner(target) { this.barcodeTarget = target; this.barcodeManualInput = ''; this.cameraError = ''; this.cameraLoading = true; this.modals.barcode = true; this.$nextTick(() => setTimeout(() => this.startCameraScan(), 400)); },
-                closeBarcodeScanner() { this.stopCameraScan(); this.modals.barcode = false; this.barcodeTarget = null; },
+                // ============ الوضع الليلي ============
+                toggleDark() {
+                    this.darkMode = !this.darkMode;
+                    document.documentElement.classList.toggle('dark', this.darkMode);
+                    localStorage.setItem('darkMode', this.darkMode);
+                },
+                loadDarkMode() {
+                    this.darkMode = localStorage.getItem('darkMode') === 'true';
+                    document.documentElement.classList.toggle('dark', this.darkMode);
+                },
+
+                // ============ تنبيهات المخزون ============
+                checkStockAlerts() {
+                    this.inventory.filter(i => i.stock < 5).forEach(i => {
+                        if (!this.notifications.find(n => n.type === 'stock' && n.message.includes(i.name)))
+                            this.pushNotification('stock', 'نقص مخزون', `${i.name} - المتبقي ${i.stock} فقط`);
+                    });
+                },
+
+                // ============ الباركود (الكاميرا) ============
+                openBarcodeScanner(target) {
+                    this.barcodeTarget = target;
+                    this.barcodeManualInput = '';
+                    this.cameraError = '';
+                    this.cameraLoading = true;
+                    this.modals.barcode = true;
+                    this.$nextTick(() => setTimeout(() => this.startCameraScan(), 400));
+                },
+                closeBarcodeScanner() {
+                    this.stopCameraScan();
+                    this.modals.barcode = false;
+                    this.barcodeTarget = null;
+                },
                 async startCameraScan() {
                     try {
                         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { this.cameraLoading = false; this.cameraError = 'المتصفح لا يدعم الكاميرا'; return; }
@@ -1241,36 +1057,61 @@
                         this.cameraLoading = false;
                     } catch (err) { this.cameraLoading = false; this.cameraError = 'فشل فتح الكاميرا. استخدم الإدخال اليدوي.'; }
                 },
-                async stopCameraScan() { if (this.barcodeScanner) { try { await this.barcodeScanner.stop(); this.barcodeScanner.clear(); } catch(e) {} this.barcodeScanner = null; } },
+                async stopCameraScan() {
+                    if (this.barcodeScanner) {
+                        try { await this.barcodeScanner.stop(); this.barcodeScanner.clear(); } catch(e) {}
+                        this.barcodeScanner = null;
+                    }
+                },
                 applyBarcode(code) {
-                    if (!code || !code.trim()) return; const trimmed = code.trim();
+                    if (!code || !code.trim()) return;
+                    const trimmed = code.trim();
                     if (this.barcodeTarget === 'sale') {
                         const p = this.inventory.find(i => i.barcode === trimmed);
                         if (!p) { this.stopCameraScan(); return this.toast('لم يتم العثور على المنتج', 'error'); }
                         this.selectProductFromSearch(p); this.closeBarcodeScanner();
-                    } else if (this.barcodeTarget === 'inventory') { this.invForm.barcode = trimmed; this.closeBarcodeScanner(); } 
-                    else if (this.barcodeTarget === 'editInventory') { this.editInvForm.barcode = trimmed; this.closeBarcodeScanner(); }
+                    } else if (this.barcodeTarget === 'inventory') {
+                        this.invForm.barcode = trimmed; this.closeBarcodeScanner();
+                    } else if (this.barcodeTarget === 'editInventory') {
+                        this.editInvForm.barcode = trimmed; this.closeBarcodeScanner();
+                    }
                 },
 
-                toggleDark() { this.darkMode = !this.darkMode; document.documentElement.classList.toggle('dark', this.darkMode); localStorage.setItem('darkMode', this.darkMode); },
-                loadDarkMode() { this.darkMode = localStorage.getItem('darkMode') === 'true'; document.documentElement.classList.toggle('dark', this.darkMode); },
-                checkStockAlerts() { this.inventory.filter(i => i.stock < 5).forEach(i => { if (!this.notifications.find(n => n.type === 'stock' && n.message.includes(i.name))) this.pushNotification('stock', 'نقص مخزون', `${i.name} - المتبقي ${i.stock} فقط`); }); },
-
+                // ============ الرسوم البيانية ============
                 renderCharts() {
                     if (this.currentTab !== 'dashboard') return;
                     this.$nextTick(() => {
                         const days = []; const totals = [];
-                        for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); const dateStr = d.toISOString().split('T')[0]; days.push(d.toLocaleDateString(this.lang === 'en' ? 'en-US' : 'ar-DZ', { weekday: 'short' })); totals.push(this.sales.filter(s => s.date === dateStr).reduce((sum, s) => sum + this.saleTotal(s), 0)); }
+                        for (let i = 6; i >= 0; i--) {
+                            const d = new Date(); d.setDate(d.getDate() - i);
+                            const dateStr = d.toISOString().split('T')[0];
+                            days.push(d.toLocaleDateString(this.lang === 'en' ? 'en-US' : 'ar-DZ', { weekday: 'short' }));
+                            totals.push(this.sales.filter(s => s.date === dateStr).reduce((sum, s) => sum + this.saleTotal(s), 0));
+                        }
                         const ctx1 = document.getElementById('salesChart');
-                        if (ctx1) { if (this.charts.sales) this.charts.sales.destroy(); this.charts.sales = new Chart(ctx1, { type: 'line', data: { labels: days, datasets: [{ label: 'Sales', data: totals, borderColor: '#16a34a', backgroundColor: 'rgba(22,163,74,0.1)', fill: true, tension: 0.4, borderWidth: 3, pointBackgroundColor: '#16a34a' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { font: { family: 'Cairo' } } }, x: { ticks: { font: { family: 'Cairo' } } } } } }); }
+                        if (ctx1) {
+                            if (this.charts.sales) this.charts.sales.destroy();
+                            this.charts.sales = new Chart(ctx1, {
+                                type: 'line',
+                                data: { labels: days, datasets: [{ label: 'Sales', data: totals, borderColor: '#16a34a', backgroundColor: 'rgba(22,163,74,0.1)', fill: true, tension: 0.4, borderWidth: 3, pointBackgroundColor: '#16a34a' }] },
+                                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { font: { family: 'Cairo' } } }, x: { ticks: { font: { family: 'Cairo' } } } } }
+                            });
+                        }
                         const productTotals = {};
                         this.sales.forEach(s => { (s.items || []).forEach(item => { productTotals[item.itemName] = (productTotals[item.itemName] || 0) + item.quantity; }); });
                         const ctx2 = document.getElementById('productsChart');
-                        if (ctx2) { if (this.charts.products) this.charts.products.destroy(); this.charts.products = new Chart(ctx2, { type: 'doughnut', data: { labels: Object.keys(productTotals), datasets: [{ data: Object.values(productTotals), backgroundColor: ['#16a34a', '#22c55e', '#f59e0b', '#3b82f6', '#ef4444', '#8b5cf6', '#ec4899'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { family: 'Cairo' }, padding: 10 } } } } }); }
+                        if (ctx2) {
+                            if (this.charts.products) this.charts.products.destroy();
+                            this.charts.products = new Chart(ctx2, {
+                                type: 'doughnut',
+                                data: { labels: Object.keys(productTotals), datasets: [{ data: Object.values(productTotals), backgroundColor: ['#16a34a', '#22c55e', '#f59e0b', '#3b82f6', '#ef4444', '#8b5cf6', '#ec4899'], borderWidth: 0 }] },
+                                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { family: 'Cairo' }, padding: 10 } } } }
+                            });
+                        }
                     });
                 }
+            }
+        }
     </script>
-<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-<script>eruda.init();</script>
 </body>
 </html>
