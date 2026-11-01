@@ -1108,10 +1108,91 @@
                                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { family: 'Cairo' }, padding: 10 } } } }
                             });
                         }
-                    });
-                }
+       },
+initApp() {
+    this.loadFromStorage();
+    if (this.sales.length === 0) this.seedDemoData();
+    this.loadDarkMode();
+    document.documentElement.setAttribute('dir', this.dir);
+    document.documentElement.setAttribute('lang', this.lang);
+    this.$watch('currentTab', () => this.$nextTick(() => this.renderCharts()));
+    this.$watch('sales', () => this.saveToStorage());
+    this.$watch('inventory', () => this.saveToStorage());
+    this.$watch('customers', () => this.saveToStorage());
+    this.$watch('debts', () => this.saveToStorage());
+    this.$watch('debtPayments', () => this.saveToStorage());
+    this.$watch('expenses', () => this.saveToStorage());
+    this.$watch('closedShifts', () => this.saveToStorage());
+    this.$watch('shopInfo', () => this.saveToStorage());
+    this.checkStockAlerts();
+},
+saveToStorage() { try { localStorage.setItem('merchant_data', JSON.stringify({ sales: this.sales, inventory: this.inventory, customers: this.customers, debts: this.debts, debtPayments: this.debtPayments, expenses: this.expenses, closedShifts: this.closedShifts, shiftNumber: this.shiftNumber, shiftStartDate: this.shiftStartDate, shopInfo: this.shopInfo })); } catch(e) {} },
+loadFromStorage() { try { const d = JSON.parse(localStorage.getItem('merchant_data') || '{}'); this.sales = d.sales || []; this.inventory = d.inventory || []; this.customers = d.customers || []; this.debts = d.debts || []; this.debtPayments = d.debtPayments || []; this.expenses = d.expenses || []; this.closedShifts = d.closedShifts || []; this.shiftNumber = d.shiftNumber || 1; this.shiftStartDate = d.shiftStartDate || new Date().toISOString().split('T')[0]; this.shopInfo = d.shopInfo || { name: 'التاجر المتنقل', phone: '', address: '', logo: null }; } catch(e) {} },
+seedDemoData() { this.inventory = [{ id: 1, name: 'زيت 5L', category: 'بقالة', buyPrice: 800, sellPrice: 1100, stock: 25, maxStock: 50, image: null, barcode: '6001234500011' }]; this.customers = [{ id: 1, name: 'محمد بن علي', phone: '0550112233', address: 'حي النصر', notes: '', lat: null, lng: null }]; const today = new Date().toISOString().split('T')[0]; this.sales = []; this.debts = []; this.expenses = []; this.closedShifts = []; this.shiftNumber = 1; this.shiftStartDate = today; this.saveToStorage(); },
+getBadgeCount(tab) { if (tab === 'sales') return this.sales.filter(s => s.status === 'pending').length; if (tab === 'debts') return this.debts.filter(d => d.status !== 'paid').length; if (tab === 'expenses') return this.expenses.length; return 0; },
+statusBadgeClass(st) { return { paid: 'bg-emerald-100 text-emerald-700', pending: 'bg-amber-100 text-amber-700', debt: 'bg-rose-100 text-rose-700' }[st] || 'bg-slate-100 text-slate-600'; },
+statusText(st) { return { paid: 'مدفوع', pending: 'معلق', debt: 'دين' }[st] || st; },
+paymentMethodText(m) { return { cash: 'نقدي', credit: 'دين', partial: 'دفع جزئي' }[m] || 'نقدي'; },
+expenseTypeText(t) { return { fuel: 'وقود', maintenance: 'صيانة', food: 'طعام', toll: 'طريق', parking: 'موقف', phone: 'اتصالات', other: 'أخرى' }[t] || t; },
+toast(message, type = 'success') { const id = ++this.toastId; this.toasts.push({ id, message, type }); setTimeout(() => { this.toasts = this.toasts.filter(t => t.id !== id); }, 3000); },
+pushNotification(type, title, message) { this.notifications.unshift({ type, title, message, read: false, time: new Date().toLocaleTimeString('ar-DZ', { hour: '2-digit', minute: '2-digit' }) }); },
+markAllRead() { this.notifications = this.notifications.map(n => ({...n, read: true})); },
+getProductImage(inventoryId) { const p = this.inventory.find(i => i.id === inventoryId); return p ? p.image : null; },
+get cartTotal() { return this.cart.reduce((sum, i) => sum + (i.itemPrice * i.quantity), 0); },
+get cartItemCount() { return this.cart.reduce((sum, i) => sum + i.quantity, 0); },
+get editCartTotal() { if (!this.editSaleForm.items) return 0; return this.editSaleForm.items.reduce((sum, i) => sum + (i.itemPrice * i.quantity), 0); },
+get priceEditTotal() { if (!this.priceEditSale || !this.priceEditSale.items) return 0; return this.priceEditSale.items.reduce((sum, i) => sum + (i.itemPrice * i.quantity), 0); },
+saleTotal(sale) { if (!sale || !sale.items) return 0; return sale.items.reduce((sum, i) => sum + (i.itemPrice * i.quantity), 0); },
+saleItemsSummary(sale) { if (!sale || !sale.items || sale.items.length === 0) return '—'; if (sale.items.length === 1) return sale.items[0].itemName + ' × ' + sale.items[0].quantity; return sale.items[0].itemName + ' (+' + (sale.items.length - 1) + ')'; },
+onCartProductSelect() { const p = this.inventory.find(i => i.id == this.cartItemForm.inventoryId); if (p) this.cartItemForm.itemPrice = p.sellPrice; },
+addToCart() { const p = this.inventory.find(i => i.id == this.cartItemForm.inventoryId); if (!p) return this.toast('اختر منتج صحيح', 'error'); const inCart = this.cart.filter(c => c.inventoryId === p.id).reduce((s, c) => s + c.quantity, 0); if (inCart + this.cartItemForm.quantity > p.stock) return this.toast('الكمية غير متوفرة', 'error'); const existing = this.cart.find(c => c.inventoryId === p.id); if (existing) { existing.quantity += this.cartItemForm.quantity; existing.itemPrice = this.cartItemForm.itemPrice; } else { this.cart.push({ inventoryId: p.id, itemName: p.name, itemPrice: this.cartItemForm.itemPrice || p.sellPrice, quantity: this.cartItemForm.quantity }); } this.cartItemForm = { inventoryId: '', quantity: 1, itemPrice: 0 }; this.cartProductSearch = ''; this.productSuggestions = []; this.toast('تمت الإضافة', 'success'); },
+removeFromCart(index) { this.cart.splice(index, 1); },
+updateCartQuantity(index, delta) { const item = this.cart[index]; const p = this.inventory.find(i => i.id === item.inventoryId); const newQty = item.quantity + delta; if (newQty < 1) return this.removeFromCart(index); if (p && newQty > p.stock) return this.toast('الكمية القصوى: ' + p.stock, 'warning'); item.quantity = newQty; },
+updateCartPrice(index, newPrice) { this.cart[index].itemPrice = Number(newPrice) || 0; },
+updateCustomerSuggestions() { if (!this.saleForm.customerName) { this.customerSuggestions = []; return; } const q = this.saleForm.customerName.toLowerCase(); this.customerSuggestions = this.customers.filter(c => c.name.toLowerCase().includes(q) || (c.phone || '').includes(q)); },
+updateProductSuggestions() { if (!this.cartProductSearch) { this.productSuggestions = []; return; } const q = this.cartProductSearch.toLowerCase(); this.productSuggestions = this.inventory.filter(p => p.name.toLowerCase().includes(q) || (p.barcode || '').includes(q)); },
+selectProductFromSearch(p) { this.cartItemForm.inventoryId = p.id; this.cartItemForm.itemPrice = p.sellPrice; this.cartProductSearch = p.name; this.productSuggestions = []; },
+get todaySalesCount() { const today = new Date().toISOString().split('T')[0]; return this.sales.filter(s => s.date === today).length; },
+get totalSalesAmount() { return this.sales.reduce((s, x) => s + this.saleTotal(x), 0); },
+get netProfits() { return this.sales.reduce((sum, s) => { let saleCost = 0; (s.items || []).forEach(item => { const p = this.inventory.find(i => i.id === item.inventoryId); if (p) saleCost += p.buyPrice * item.quantity; }); return sum + (this.saleTotal(s) - saleCost); }, 0); },
+get totalExpenses() { return this.expenses.reduce((s, e) => s + Number(e.amount || 0), 0); },
+get realNetProfit() { return this.netProfits - this.totalExpenses; },
+get totalPendingDebts() { return this.debts.reduce((s, d) => s + (d.totalAmount - d.paidAmount), 0); },
+get pendingDebtsCount() { return this.debts.filter(d => d.status !== 'paid').length; },
+get unreadCount() { return this.notifications.filter(n => !n.read).length; },
+get filteredSales() { return this.sales.filter(s => { const search = this.salesSearch.toLowerCase(); const matchSearch = !this.salesSearch || s.customerName.toLowerCase().includes(search) || (s.items || []).some(i => i.itemName.toLowerCase().includes(search)); const matchFilter = !this.salesFilter || s.status === this.salesFilter; return matchSearch && matchFilter; }); },
+get filteredCustomers() { if (!this.customersSearch) return this.customers; const q = this.customersSearch.toLowerCase(); return this.customers.filter(c => c.name.toLowerCase().includes(q) || (c.phone || '').includes(q)); },
+get filteredInventory() { if (!this.inventorySearch) return this.inventory; const q = this.inventorySearch.toLowerCase(); return this.inventory.filter(i => i.name.toLowerCase().includes(q) || (i.barcode || '').includes(q)); },
+getCustomerTotal(cid) { const cust = this.customers.find(c => c.id === cid); if (!cust) return 0; return this.sales.filter(s => s.customerName === cust.name).reduce((sum, s) => sum + this.saleTotal(s), 0); },
+getCustomerDebt(cid) { const cust = this.customers.find(c => c.id === cid); if (!cust) return 0; return this.debts.filter(d => d.customerName === cust.name).reduce((sum, d) => sum + (d.totalAmount - d.paidAmount), 0); },
+openModal(type) { this.modals[type] = true; if (type === 'sale') { this.saleForm = { customerName: '', inventoryId: '', quantity: 1, itemPrice: 0, paymentMethod: 'cash', paidAmount: 0 }; this.cart = []; this.cartItemForm = { inventoryId: '', quantity: 1, itemPrice: 0 }; this.cartProductSearch = ''; this.customerSuggestions = []; this.productSuggestions = []; } if (type === 'inventory') this.invForm = { name: '', category: '', buyPrice: 0, sellPrice: 0, stock: 0, image: null, barcode: '' }; if (type === 'customer') this.custForm = { name: '', phone: '', address: '', notes: '', lat: null, lng: null }; if (type === 'expense') this.expenseForm = { type: 'fuel', amount: 0, description: '' }; },
+closeModal(type) { this.modals[type] = false; },
+openSettings() { this.modals.settings = true; },
+saveSettings() { this.closeModal('settings'); this.toast('تم الحفظ', 'success'); },
+viewProductImage(item) { if (item.image) { this.viewImageSrc = item.image; this.modals.viewImage = true; } },
+addSale() { if (this.cart.length === 0) return; const total = this.cartTotal; const sale = { id: Date.now(), customerName: this.saleForm.customerName, items: JSON.parse(JSON.stringify(this.cart)), status: 'paid', paymentMethod: this.saleForm.paymentMethod, date: new Date().toISOString().split('T')[0] }; this.sales.unshift(sale); this.cart.forEach(c => { const p = this.inventory.find(i => i.id === c.inventoryId); if (p) p.stock -= c.quantity; }); this.closeModal('sale'); this.toast('تم حفظ الفاتورة', 'success'); },
+openEditSale(sale) { this.editSaleForm = { id: sale.id, customerName: sale.customerName, items: JSON.parse(JSON.stringify(sale.items)) }; this.modals.editSale = true; },
+saveEditSale() { const original = this.sales.find(s => s.id === this.editSaleForm.id); if (original) { original.items = JSON.parse(JSON.stringify(this.editSaleForm.items)); original.customerName = this.editSaleForm.customerName; this.closeModal('editSale'); this.toast('تم التحديث', 'success'); } },
+deleteSale(sale) { this.sales = this.sales.filter(s => s.id !== sale.id); this.toast('تم الحذف', 'success'); },
+printReceipt(sale) { const total = this.saleTotal(sale); const itemsRows = (sale.items || []).map(i => `<tr><td>${i.itemName}</td><td>${i.quantity}</td><td>${i.itemPrice}</td><td>${i.itemPrice*i.quantity}</td></tr>`).join(''); const html = `<div dir="rtl"><h2>${this.shopInfo.name}</h2><p>${sale.customerName}</p><table>${itemsRows}</table><p>Total: ${total} ${this.currency}</p></div>`; document.getElementById('receiptPrint').innerHTML = html; window.print(); },
+sendWhatsApp(sale) { window.open('https://wa.me/?text=' + encodeURIComponent('فاتورة: ' + this.saleTotal(sale) + ' ' + this.currency), '_blank'); },
+addInventory() { this.inventory.push({ ...this.invForm, id: Date.now(), maxStock: 50 }); this.closeModal('inventory'); this.toast('تمت الإضافة', 'success'); },
+deleteInventory(id) { this.inventory = this.inventory.filter(i => i.id !== id); this.toast('تم الحذف', 'success'); },
+adjustStock(id, delta) { const p = this.inventory.find(i => i.id === id); if (p) p.stock = Math.max(0, p.stock + delta); },
+addCustomer() { this.customers.push({ ...this.custForm, id: Date.now() }); this.closeModal('customer'); this.toast('تمت الإضافة', 'success'); },
+deleteCustomer(id) { this.customers = this.customers.filter(c => c.id !== id); this.toast('تم الحذف', 'success'); },
+addExpense() { this.expenses.unshift({ id: Date.now(), type: this.expenseForm.type, amount: Number(this.expenseForm.amount), description: this.expenseForm.description, date: new Date().toISOString().split('T')[0] }); this.closeModal('expense'); this.toast('تم الحفظ', 'success'); },
+openClotureConfirm() { this.closedShifts.unshift({ id: Date.now(), number: this.shiftNumber, totalSales: this.totalSalesAmount, totalExpenses: this.totalExpenses, realNetProfit: this.realNetProfit, sales: JSON.parse(JSON.stringify(this.sales)) }); this.sales = []; this.expenses = []; this.shiftNumber += 1; this.toast('تم إغلاق الجولة', 'success'); },
+confirmAction() { if (this.pendingConfirm) this.pendingConfirm(); this.modals.confirm = false; },
+changeCurrency(newCurrency) { this.currency = newCurrency; localStorage.setItem('currency', newCurrency); },
+cycleCurrency() { const currencies = ['د.ج', '€', '$', 'د.م', 'ر.س']; let currentIndex = currencies.indexOf(this.currency); if (currentIndex === -1) currentIndex = 0; this.currency = currencies[(currentIndex + 1) % currencies.length]; localStorage.setItem('currency', this.currency); },
+toggleLanguage() { this.lang = this.lang === 'ar' ? 'en' : 'ar'; this.dir = this.lang === 'en' ? 'ltr' : 'rtl'; localStorage.setItem('lang', this.lang); document.documentElement.setAttribute('dir', this.dir); document.documentElement.setAttribute('lang', this.lang); this.toast(this.lang === 'en' ? 'Language: English' : 'اللغة: العربية', 'success'); },
+toggleDark() { this.darkMode = !this.darkMode; document.documentElement.classList.toggle('dark', this.darkMode); localStorage.setItem('darkMode', this.darkMode); },
+loadDarkMode() { this.darkMode = localStorage.getItem('darkMode') === 'true'; document.documentElement.classList.toggle('dark', this.darkMode); },
+checkStockAlerts() { this.inventory.filter(i => i.stock < 5).forEach(i => { if (!this.notifications.find(n => n.type === 'stock' && n.message.includes(i.name))) this.pushNotification('stock', 'نقص مخزون', `${i.name} - المتبقي ${i.stock} فقط`); }); },                                 }
             }
         }
     </script>
 </body>
 </html>
+
